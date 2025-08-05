@@ -392,6 +392,129 @@ window.debug = {
             };
         }
         return null;
+    },
+    
+    // ==========================================
+    // FUNCIONES DE DEPURACIÓN MULTIVERSALES
+    // ==========================================
+    
+    unlockMultiverse: () => {
+        if (gameEngine) {
+            gameEngine.gameState.player.currentEra = 12;
+            gameEngine.gameState.resources.quantum_time = 10000;
+            gameEngine.gameState.resources.genetic_data = 5000;
+            gameEngine.gameState.resources.cosmic_knowledge = 1000;
+            gameEngine.gameState.resources.dimensional_energy = 500;
+            gameEngine.gameState.resources.reality_essence = 10;
+            
+            // Inicializar sistema multiversal si no existe
+            if (!gameEngine.multiverseSystem && gameEngine.gameState.player.currentEra >= 12) {
+                gameEngine.multiverseSystem = new MultiverseSystem(gameEngine);
+            }
+            
+            console.log('🌌 Multiverso desbloqueado con recursos iniciales');
+        }
+    },
+    
+    plantSeed: (seedType = 'basic_quantum_seed') => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            const result = gameEngine.multiverseSystem.plantQuantumSeed(seedType);
+            console.log('🌱 Resultado de plantar semilla:', result);
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    generateAnomaly: (universeId) => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            const universe = gameEngine.multiverseSystem.connectedUniverses.get(universeId);
+            if (universe) {
+                const anomaly = gameEngine.multiverseSystem.generateAnomaly(universeId);
+                console.log('⚠️ Anomalía generada:', anomaly);
+            } else {
+                console.log('❌ Universo no encontrado:', universeId);
+                console.log('Universos disponibles:', Array.from(gameEngine.multiverseSystem.connectedUniverses.keys()));
+            }
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    getMultiverseInfo: () => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            console.log('=== MULTIVERSE SYSTEM INFO ===');
+            console.log('Connected Universes:', gameEngine.multiverseSystem.getConnectedUniverses());
+            console.log('Active Anomalies:', gameEngine.multiverseSystem.getActiveAnomalies());
+            console.log('Nexus Status:', gameEngine.multiverseSystem.getNexusStatus());
+            console.log('Multiversal Factions:', gameEngine.multiverseSystem.getMultiversalFactions());
+            console.log('Reality Manipulations:', Array.from(gameEngine.multiverseSystem.realityManipulations.values()));
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    manipulateReality: (universeId, lawType, newValue) => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            const cost = {
+                dimensional_energy: 100,
+                cosmic_knowledge: 50
+            };
+            const result = gameEngine.multiverseSystem.manipulatePhysicalLaw(universeId, lawType, newValue, cost);
+            console.log('⚛️ Resultado de manipulación:', result);
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    addMultiverseResources: (amounts = {}) => {
+        if (gameEngine) {
+            const defaultAmounts = {
+                quantum_time: 1000,
+                genetic_data: 500,
+                cosmic_knowledge: 100,
+                dimensional_energy: 50,
+                reality_essence: 5
+            };
+            
+            const toAdd = { ...defaultAmounts, ...amounts };
+            
+            for (const [resource, amount] of Object.entries(toAdd)) {
+                gameEngine.gameState.resources[resource] = (gameEngine.gameState.resources[resource] || 0) + amount;
+            }
+            
+            console.log('✨ Recursos multiversales añadidos:', toAdd);
+        }
+    },
+    
+    createConnection: (universe1Id, universe2Id, type = 'stable') => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            const connection = gameEngine.multiverseSystem.createConnection(universe1Id, universe2Id, type);
+            console.log('🔗 Conexión creada:', connection);
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    listUniverses: () => {
+        if (gameEngine && gameEngine.multiverseSystem) {
+            const universes = gameEngine.multiverseSystem.getConnectedUniverses();
+            console.log('🌍 Universos conectados:');
+            universes.forEach(universe => {
+                console.log(`- ${universe.name} (${universe.id}): ${universe.type.name}, Estabilidad: ${Math.round(universe.stability * 100)}%`);
+            });
+        } else {
+            console.log('❌ Sistema multiversal no disponible');
+        }
+    },
+    
+    quickMultiverseSetup: () => {
+        debug.unlockMultiverse();
+        setTimeout(() => {
+            debug.plantSeed('basic_quantum_seed');
+            debug.plantSeed('temporal_quantum_seed');
+            debug.addMultiverseResources({ quantum_time: 50000, genetic_data: 25000, reality_essence: 50 });
+            console.log('🚀 Configuración rápida del multiverso completada');
+        }, 1000);
     }
 };
 

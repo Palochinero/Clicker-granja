@@ -90,6 +90,7 @@
                     <button class="tab" data-tab="research">🔬 Investigación</button>
                     <button class="tab" data-tab="prestige">✨ Prestigio</button>
                     <button class="tab" data-tab="achievements">🏆 Logros</button>
+                    <button class="tab" data-tab="multiverse" id="multiverse-tab" style="display: none;">🌌 Multiverso</button>
                     <button class="tab" data-tab="settings">⚙️ Opciones</button>
                 </nav>
 
@@ -214,6 +215,65 @@
                             <button id="reset-game" class="settings-btn danger">Reiniciar Todo</button>
                         </div>
                     </div>
+                    
+                    <!-- Pestaña del Multiverso -->
+                    <div id="multiverse-tab" class="tab-panel" style="display: none;">
+                        <h3>🌌 Jardín de las Realidades</h3>
+                        
+                        <!-- Recursos Multiversales -->
+                        <div class="multiverse-section">
+                            <h4>⚛️ Recursos Interdimensionales</h4>
+                            <div id="multiverse-resources" class="resource-grid">
+                                <!-- Los recursos se generarán dinámicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Nexus Central -->
+                        <div class="multiverse-section">
+                            <h4>🏗️ Nexus Central</h4>
+                            <div id="nexus-status" class="nexus-display">
+                                <div class="nexus-info">
+                                    <span>Nivel: <span id="nexus-level">0</span></span>
+                                    <span>Universos: <span id="connected-universes">0</span></span>
+                                </div>
+                                <div id="nexus-modules" class="nexus-modules">
+                                    <!-- Módulos del Nexus -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Semillas Cuánticas -->
+                        <div class="multiverse-section">
+                            <h4>🌱 Semillas Cuánticas</h4>
+                            <div id="quantum-seeds" class="seeds-grid">
+                                <!-- Las semillas se generarán dinámicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Universos Conectados -->
+                        <div class="multiverse-section">
+                            <h4>🌍 Universos Conectados</h4>
+                            <div id="universe-map" class="universe-grid">
+                                <!-- Los universos se generarán dinámicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Anomalías Activas -->
+                        <div class="multiverse-section">
+                            <h4>⚠️ Anomalías Multiversales</h4>
+                            <div id="anomalies-display" class="anomalies-list">
+                                <!-- Las anomalías se generarán dinámicamente -->
+                            </div>
+                        </div>
+                        
+                        <!-- Tecnologías Multiversales -->
+                        <div class="multiverse-section">
+                            <h4>🔬 Tecnologías Multiversales</h4>
+                            <div id="multiverse-tech-tree" class="tech-tree">
+                                <!-- El árbol de tecnologías se generará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -235,6 +295,7 @@
     <script src="js/utils.js"></script>
     <script src="js/gameData.js"></script>
     <script src="js/prestigeSystem.js"></script>
+    <script src="js/multiverseSystem.js"></script>
     <script src="js/gameEngine.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>

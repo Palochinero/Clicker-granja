@@ -311,6 +311,9 @@ class GameUI {
             case 'prestige':
                 this.updatePrestigeTab(gameState);
                 break;
+            case 'multiverse':
+                this.updateMultiverseTab(gameState);
+                break;
         }
     }
     
@@ -1106,6 +1109,490 @@ class GameUI {
                 this.updateUI();
             }
         }
+    }
+    
+    // ==========================================
+    // SISTEMA MULTIVERSAL UI
+    // ==========================================
+    
+    updateMultiverseTab(gameState) {
+        // Solo mostrar si está desbloqueado (Era 12+)
+        const multiverseTab = document.getElementById('multiverse-tab');
+        if (gameState.player.currentEra >= 12) {
+            if (multiverseTab) {
+                multiverseTab.style.display = 'block';
+            }
+            
+            this.updateMultiverseResources(gameState);
+            this.updateNexusStatus(gameState);
+            this.updateQuantumSeeds(gameState);
+            this.updateConnectedUniverses(gameState);
+            this.updateAnomalies(gameState);
+            this.updateMultiverseTechnologies(gameState);
+        } else {
+            if (multiverseTab) {
+                multiverseTab.style.display = 'none';
+            }
+        }
+    }
+    
+    updateMultiverseResources(gameState) {
+        const container = document.getElementById('multiverse-resources');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        for (const [resourceId, resourceData] of Object.entries(MULTIVERSAL_RESOURCES)) {
+            const amount = gameState.resources[resourceId] || 0;
+            
+            const resourceElement = document.createElement('div');
+            resourceElement.className = 'multiverse-resource';
+            
+            resourceElement.innerHTML = `
+                <div class="resource-name">
+                    <span>${resourceData.emoji}</span>
+                    <span>${resourceData.name}</span>
+                </div>
+                <div class="resource-amount">${formatNumber(amount)}</div>
+                <div class="resource-description">${resourceData.description}</div>
+            `;
+            
+            container.appendChild(resourceElement);
+        }
+    }
+    
+    updateNexusStatus(gameState) {
+        const nexusLevelElement = document.getElementById('nexus-level');
+        const connectedUniversesElement = document.getElementById('connected-universes');
+        const nexusModulesContainer = document.getElementById('nexus-modules');
+        
+        if (nexusLevelElement) {
+            nexusLevelElement.textContent = gameState.multiverse.nexusLevel;
+        }
+        
+        if (connectedUniversesElement) {
+            const connectedCount = Object.keys(gameState.multiverse.connectedUniverses).length;
+            connectedUniversesElement.textContent = connectedCount;
+        }
+        
+        if (nexusModulesContainer && this.game.multiverseSystem) {
+            const nexusStatus = this.game.multiverseSystem.getNexusStatus();
+            nexusModulesContainer.innerHTML = '';
+            
+            for (const [moduleId, moduleData] of Object.entries(nexusStatus.modules)) {
+                const moduleElement = document.createElement('div');
+                moduleElement.className = `nexus-module ${moduleData.active ? 'active' : 'inactive'}`;
+                
+                moduleElement.innerHTML = `
+                    <div class="module-name">${this.getModuleName(moduleId)}</div>
+                    <div class="module-level">Nivel ${moduleData.level}</div>
+                `;
+                
+                nexusModulesContainer.appendChild(moduleElement);
+            }
+        }
+    }
+    
+    getModuleName(moduleId) {
+        const names = {
+            monitoring: 'Monitorización',
+            connection_management: 'Gestión Conexiones',
+            quantum_storage: 'Almacén Cuántico',
+            temporal_sync: 'Sincronización Temporal',
+            research_center: 'Centro Investigación'
+        };
+        return names[moduleId] || moduleId;
+    }
+    
+    updateQuantumSeeds(gameState) {
+        const container = document.getElementById('quantum-seeds');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        for (const [seedId, seedData] of Object.entries(QUANTUM_SEEDS)) {
+            const seedElement = document.createElement('div');
+            seedElement.className = 'quantum-seed';
+            
+            const canAfford = this.canAffordSeed(seedData.cost, gameState);
+            const isUnlocked = this.isSeedUnlocked(seedData, gameState);
+            
+            if (canAfford && isUnlocked) {
+                seedElement.classList.add('affordable');
+            } else if (!isUnlocked) {
+                seedElement.classList.add('locked');
+            }
+            
+            const costDisplay = Object.entries(seedData.cost).map(([resource, amount]) => {
+                const currentAmount = gameState.resources[resource] || 0;
+                const sufficient = currentAmount >= amount;
+                return `
+                    <div class="cost-item">
+                        <span>${MULTIVERSAL_RESOURCES[resource]?.name || resource}</span>
+                        <span class="cost-amount ${sufficient ? '' : 'insufficient'}">${formatNumber(amount)}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            seedElement.innerHTML = `
+                <div class="seed-name">${seedData.name}</div>
+                <div class="seed-description">${seedData.description}</div>
+                <div class="seed-cost">${costDisplay}</div>
+                <button class="seed-plant-btn" 
+                        ${canAfford && isUnlocked ? '' : 'disabled'}
+                        onclick="ui.plantQuantumSeed('${seedId}')">
+                    🌱 Plantar Semilla
+                </button>
+            `;
+            
+            container.appendChild(seedElement);
+        }
+    }
+    
+    canAffordSeed(cost, gameState) {
+        for (const [resource, amount] of Object.entries(cost)) {
+            if ((gameState.resources[resource] || 0) < amount) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    isSeedUnlocked(seedData, gameState) {
+        // Por ahora, todas las semillas están desbloqueadas en Era 12+
+        // En el futuro, podrían tener requisitos específicos
+        return gameState.player.currentEra >= 12;
+    }
+    
+    plantQuantumSeed(seedId) {
+        if (this.game.multiverseSystem) {
+            const result = this.game.multiverseSystem.plantQuantumSeed(seedId);
+            if (result.success) {
+                this.showNotification(`✨ ${result.message}`, 'success');
+                this.game.save(); // Guardar después de plantar una semilla
+            } else {
+                this.showNotification(`❌ ${result.message}`, 'error');
+            }
+        }
+    }
+    
+    updateConnectedUniverses(gameState) {
+        const container = document.getElementById('universe-map');
+        if (!container || !this.game.multiverseSystem) return;
+        
+        container.innerHTML = '';
+        
+        const connectedUniverses = this.game.multiverseSystem.getConnectedUniverses();
+        
+        if (connectedUniverses.length === 0) {
+            container.innerHTML = `
+                <div class="no-universes">
+                    <p>🌌 No hay universos conectados</p>
+                    <p>Planta una Semilla Cuántica para comenzar tu viaje multiversal</p>
+                </div>
+            `;
+            return;
+        }
+        
+        for (const universe of connectedUniverses) {
+            const universeElement = document.createElement('div');
+            universeElement.className = `universe-card ${this.getUniverseTypeClass(universe.type)}`;
+            
+            universeElement.innerHTML = `
+                <div class="universe-header">
+                    <div class="universe-name">${universe.name}</div>
+                    <div class="universe-type">${universe.type.name}</div>
+                </div>
+                
+                <div class="universe-properties">
+                    <div>Temperatura: ${Math.round(universe.properties.temperature)}°C</div>
+                    <div>Gravedad: ${universe.properties.gravity.toFixed(1)}x</div>
+                    <div>Flujo Temporal: ${universe.properties.time_flow.toFixed(1)}x</div>
+                    <div>Energía: ${Math.round(universe.properties.energy_level * 100)}%</div>
+                </div>
+                
+                <div class="universe-stability">
+                    <div>Estabilidad: ${Math.round(universe.stability * 100)}%</div>
+                    <div class="stability-bar">
+                        <div class="stability-fill" style="width: ${universe.stability * 100}%"></div>
+                    </div>
+                </div>
+                
+                <div class="universe-actions">
+                    <button class="universe-btn" onclick="ui.exploreUniverse('${universe.id}')">
+                        🔍 Explorar
+                    </button>
+                    <button class="universe-btn" onclick="ui.harvestUniverse('${universe.id}')">
+                        🌾 Cosechar
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(universeElement);
+        }
+    }
+    
+    getUniverseTypeClass(universeType) {
+        const typeMap = {
+            'Universo Ígneo': 'igneous',
+            'Universo Acuático': 'aquatic',
+            'Universo Gaseoso': 'gaseous',
+            'Universo Cristalino': 'crystalline',
+            'Universo Entrópico': 'entropic',
+            'Universo Acelerado': 'accelerated',
+            'Universo Ralentizado': 'decelerated',
+            'Universo Cíclico': 'cyclical',
+            'Universo Retrógrado': 'retrograde',
+            'Universo de la Abundancia': 'abundance',
+            'Universo de la Escasez': 'scarcity',
+            'Universo de los Sueños': 'dreams',
+            'Universo de Lógica Invertida': 'inverted_logic',
+            'Universo de Gravedad Variable': 'variable_gravity',
+            'Universo de Colores Invertidos': 'inverted_colors',
+            'Universo de Resonancia': 'resonance',
+            'Universo Paradoja': 'paradox'
+        };
+        return typeMap[universeType.name] || 'unknown';
+    }
+    
+    exploreUniverse(universeId) {
+        // Función placeholder para explorar universos
+        this.showNotification(`🔍 Explorando universo ${universeId}...`, 'info');
+    }
+    
+    harvestUniverse(universeId) {
+        // Función placeholder para cosechar recursos de universos
+        if (this.game.multiverseSystem) {
+            const universe = this.game.multiverseSystem.connectedUniverses.get(universeId);
+            if (universe) {
+                let totalHarvested = 0;
+                for (const [resource, amount] of universe.resources) {
+                    this.game.gameState.resources[resource] = 
+                        (this.game.gameState.resources[resource] || 0) + amount;
+                    totalHarvested += amount;
+                }
+                
+                if (totalHarvested > 0) {
+                    universe.resources.clear();
+                    this.showNotification(`🌾 Cosechado ${formatNumber(totalHarvested)} recursos`, 'success');
+                } else {
+                    this.showNotification(`🌾 No hay recursos para cosechar`, 'info');
+                }
+            }
+        }
+    }
+    
+    updateAnomalies(gameState) {
+        const container = document.getElementById('anomalies-display');
+        if (!container || !this.game.multiverseSystem) return;
+        
+        container.innerHTML = '';
+        
+        const activeAnomalies = this.game.multiverseSystem.getActiveAnomalies();
+        
+        if (activeAnomalies.length === 0) {
+            container.innerHTML = `
+                <div class="no-anomalies">
+                    <p>✨ No hay anomalías activas</p>
+                    <p>El multiverso está en calma...</p>
+                </div>
+            `;
+            return;
+        }
+        
+        for (const anomaly of activeAnomalies) {
+            const anomalyElement = document.createElement('div');
+            anomalyElement.className = `anomaly-card ${this.getAnomalyClass(anomaly)}`;
+            
+            const timeRemaining = Math.max(0, anomaly.duration - (Date.now() - anomaly.startTime));
+            const timeDisplay = this.formatTime(timeRemaining);
+            
+            anomalyElement.innerHTML = `
+                <div class="anomaly-header">
+                    <div class="anomaly-type">${this.getAnomalyName(anomaly.type)}</div>
+                    <div class="anomaly-severity">${Math.round(anomaly.severity * 100)}%</div>
+                </div>
+                
+                <div class="anomaly-description">
+                    ${this.getAnomalyDescription(anomaly)}
+                </div>
+                
+                <div class="anomaly-timer">
+                    ⏱️ ${timeDisplay} restante
+                </div>
+                
+                <div class="anomaly-actions">
+                    <button class="anomaly-btn" onclick="ui.stabilizeAnomaly('${anomaly.id}')">
+                        🛡️ Estabilizar
+                    </button>
+                    <button class="anomaly-btn" onclick="ui.harvestAnomaly('${anomaly.id}')">
+                        ⚡ Aprovechar
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(anomalyElement);
+        }
+    }
+    
+    getAnomalyClass(anomaly) {
+        const beneficialTypes = ['resource_rain', 'energy_surge', 'reality_echo'];
+        const neutralTypes = ['time_loop', 'matter_transmutation'];
+        
+        if (beneficialTypes.includes(anomaly.type)) {
+            return 'beneficial';
+        } else if (neutralTypes.includes(anomaly.type)) {
+            return 'neutral';
+        }
+        return 'harmful';
+    }
+    
+    getAnomalyName(type) {
+        const names = {
+            resource_rain: '🌧️ Lluvia de Recursos',
+            temporal_distortion: '⏰ Distorsión Temporal',
+            parasitic_invasion: '🦠 Invasión Parasitaria',
+            reality_echo: '👻 Eco de Realidad',
+            dimensional_rift: '🌪️ Grieta Dimensional',
+            gravity_wave: '🌊 Onda Gravitacional',
+            energy_surge: '⚡ Sobrecarga Energética',
+            consciousness_leak: '🧠 Fuga de Consciencia',
+            time_loop: '🔄 Bucle Temporal',
+            matter_transmutation: '🔬 Transmutación'
+        };
+        return names[type] || type;
+    }
+    
+    getAnomalyDescription(anomaly) {
+        const descriptions = {
+            resource_rain: 'Recursos valiosos aparecen espontáneamente',
+            temporal_distortion: 'El flujo del tiempo está alterado',
+            parasitic_invasion: 'Entidades consumen la producción',
+            reality_echo: 'Fragmentos de universos perdidos emergen',
+            dimensional_rift: 'La estabilidad dimensional está comprometida',
+            gravity_wave: 'La gravedad fluctúa impredeciblemente',
+            energy_surge: 'La producción energética se amplifica',
+            consciousness_leak: 'La eficiencia mental se ve afectada',
+            time_loop: 'Los ciclos de producción se reinician',
+            matter_transmutation: 'Los materiales se transforman'
+        };
+        return descriptions[anomaly.type] || 'Efectos desconocidos';
+    }
+    
+    formatTime(milliseconds) {
+        const seconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        
+        if (hours > 0) {
+            return `${hours}h ${minutes % 60}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds % 60}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    }
+    
+    stabilizeAnomaly(anomalyId) {
+        // Función placeholder para estabilizar anomalías
+        this.showNotification(`🛡️ Intentando estabilizar anomalía...`, 'info');
+    }
+    
+    harvestAnomaly(anomalyId) {
+        // Función placeholder para aprovechar anomalías
+        this.showNotification(`⚡ Aprovechando energía anómala...`, 'info');
+    }
+    
+    updateMultiverseTechnologies(gameState) {
+        const container = document.getElementById('multiverse-tech-tree');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        for (const [branchId, branchData] of Object.entries(MULTIVERSAL_TECHNOLOGY_TREE)) {
+            const branchElement = document.createElement('div');
+            branchElement.className = 'tech-branch';
+            
+            branchElement.innerHTML = `
+                <div class="tech-branch-header">
+                    <div class="tech-branch-icon">${branchData.icon}</div>
+                    <div class="tech-branch-name">${branchData.name}</div>
+                    <div class="tech-branch-description">${branchData.description}</div>
+                </div>
+                <div class="tech-items" id="tech-items-${branchId}">
+                </div>
+            `;
+            
+            container.appendChild(branchElement);
+            
+            // Agregar tecnologías de esta rama
+            const techItemsContainer = document.getElementById(`tech-items-${branchId}`);
+            
+            for (const [techId, techData] of Object.entries(branchData.technologies)) {
+                const isUnlocked = gameState.multiverse.technologies[techId] || false;
+                const canAfford = this.canAffordTech(techData.cost, gameState);
+                const hasPrerequisites = this.hasPrerequisites(techData.prerequisites, gameState);
+                
+                const techElement = document.createElement('div');
+                techElement.className = 'tech-item';
+                
+                if (isUnlocked) {
+                    techElement.classList.add('unlocked');
+                } else if (canAfford && hasPrerequisites) {
+                    techElement.classList.add('affordable');
+                } else {
+                    techElement.classList.add('locked');
+                }
+                
+                const costDisplay = Object.entries(techData.cost).map(([resource, amount]) => {
+                    const currentAmount = gameState.resources[resource] || 0;
+                    const sufficient = currentAmount >= amount;
+                    return `
+                        <div class="tech-cost-item ${sufficient ? '' : 'insufficient'}">
+                            ${MULTIVERSAL_RESOURCES[resource]?.name || resource}: ${formatNumber(amount)}
+                        </div>
+                    `;
+                }).join('');
+                
+                techElement.innerHTML = `
+                    <div class="tech-name">${techData.name}</div>
+                    <div class="tech-description">${techData.description}</div>
+                    <div class="tech-cost">${costDisplay}</div>
+                    <button class="tech-research-btn" 
+                            ${isUnlocked ? 'disabled' : (canAfford && hasPrerequisites ? '' : 'disabled')}
+                            onclick="ui.researchTechnology('${techId}')">
+                        ${isUnlocked ? '✅ Investigado' : '🔬 Investigar'}
+                    </button>
+                `;
+                
+                techItemsContainer.appendChild(techElement);
+            }
+        }
+    }
+    
+    canAffordTech(cost, gameState) {
+        for (const [resource, amount] of Object.entries(cost)) {
+            if ((gameState.resources[resource] || 0) < amount) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    hasPrerequisites(prerequisites, gameState) {
+        if (!prerequisites || prerequisites.length === 0) return true;
+        
+        for (const prerequisite of prerequisites) {
+            if (!gameState.multiverse.technologies[prerequisite]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    researchTechnology(techId) {
+        // Función placeholder para investigar tecnologías
+        this.showNotification(`🔬 Investigando tecnología ${techId}...`, 'info');
     }
     
     // ==========================================

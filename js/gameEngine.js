@@ -11,6 +11,7 @@ class GameEngine {
         this.updateInterval = null;
         this.autoSaveInterval = null;
         this.prestigeSystem = null;
+        this.multiverseSystem = null;
         
         // Multiplicadores globales
         this.globalMultipliers = {
@@ -196,6 +197,11 @@ class GameEngine {
         // Inicializar sistema de prestigio
         this.prestigeSystem = new PrestigeSystem(this);
         
+        // Inicializar sistema multiversal (solo si está desbloqueado)
+        if (this.gameState.player.currentEra >= 12) {
+            this.multiverseSystem = new MultiverseSystem(this);
+        }
+        
         // Calcular multiplicadores iniciales
         this.updateGlobalMultipliers();
         
@@ -239,6 +245,11 @@ class GameEngine {
         // Actualizar sistema de prestigio
         if (this.prestigeSystem) {
             this.prestigeSystem.updatePrestigeAvailability();
+        }
+        
+        // Actualizar sistema multiversal
+        if (this.multiverseSystem) {
+            this.multiverseSystem.update(deltaTime);
         }
         
         // Actualizar estadísticas del jugador

@@ -1362,7 +1362,13 @@ const INITIAL_GAME_STATE = {
         biomass: 0,
         energy: 0,
         knowledge: 0,
-        influence: 0
+        influence: 0,
+        // Recursos multiversales (desbloqueados en Era 12+)
+        quantum_time: 0,
+        genetic_data: 0,
+        reality_essence: 0,
+        dimensional_energy: 0,
+        cosmic_knowledge: 0
     },
     stats: {
         totalClicks: 0,
@@ -1379,7 +1385,19 @@ const INITIAL_GAME_STATE = {
         temporal: { level: 0, currency: 0 },
         spatial: { level: 0, currency: 0 },
         genetic: { level: 0, currency: 0 },
-        economic: { level: 0, currency: 0 }
+        economic: { level: 0, currency: 0 },
+        multiversal: { level: 0, currency: 0 } // Nuevo prestigio multiversal
+    },
+    multiverse: {
+        nexusLevel: 0,
+        connectedUniverses: {},
+        quantumSeeds: {},
+        technologies: {},
+        ascensionTree: {},
+        totalSeedsPlanted: 0,
+        totalAnomaliesResolved: 0,
+        multiversalProduction: 0,
+        factionReputation: {}
     },
     settings: {
         autoSave: true,
@@ -1393,6 +1411,639 @@ const INITIAL_GAME_STATE = {
     unlockedContent: []
 };
 
+// Nuevos recursos multiversales
+const MULTIVERSAL_RESOURCES = {
+    quantum_time: { id: "quantum_time", name: "Tiempo Cuántico", emoji: "⏰", description: "Energía temporal para manipular realidades" },
+    genetic_data: { id: "genetic_data", name: "Datos Genéticos", emoji: "🧬", description: "Información biológica universal" },
+    reality_essence: { id: "reality_essence", name: "Esencia de Realidad", emoji: "✨", description: "Moneda de prestigio multiversal" },
+    dimensional_energy: { id: "dimensional_energy", name: "Energía Dimensional", emoji: "⚡", description: "Poder para conexiones interdimensionales" },
+    cosmic_knowledge: { id: "cosmic_knowledge", name: "Conocimiento Cósmico", emoji: "📚", description: "Sabiduría del multiverso" }
+};
+
+// Tipos de universos multiversales
+const UNIVERSE_TYPES = {
+    elemental: {
+        name: "Universos Elementales",
+        types: {
+            igneous: { 
+                name: "Universo Ígneo", 
+                description: "Altas temperaturas dominantes", 
+                bonuses: { fusion_energy: 2.0 }, 
+                penalties: { organic_crops: 0.5 },
+                color: "#FF4500"
+            },
+            aquatic: { 
+                name: "Universo Acuático", 
+                description: "Mundos oceánicos", 
+                bonuses: { marine_biomass: 2.0 }, 
+                penalties: { terrestrial_farming: 0.5 },
+                color: "#0080FF"
+            },
+            gaseous: { 
+                name: "Universo Gaseoso", 
+                description: "Gigantes gaseosos", 
+                bonuses: { rare_gases: 2.0 }, 
+                penalties: { solid_construction: 0.5 },
+                color: "#8A2BE2"
+            },
+            crystalline: { 
+                name: "Universo Cristalino", 
+                description: "Formaciones cristalinas masivas", 
+                bonuses: { exotic_materials: 2.0 }, 
+                penalties: { biomass: 0.5 },
+                color: "#40E0D0"
+            },
+            entropic: { 
+                name: "Universo Entrópico", 
+                description: "Decaimiento acelerado", 
+                bonuses: { rapid_decomposition: 1.5 }, 
+                penalties: { unit_durability: 0.3 },
+                color: "#8B0000"
+            }
+        }
+    },
+    temporal: {
+        name: "Universos Temporales",
+        types: {
+            accelerated: { 
+                name: "Universo Acelerado", 
+                description: "Tiempo acelerado", 
+                bonuses: { production_speed: 3.0 }, 
+                penalties: { resource_depletion: 2.0 },
+                color: "#FFD700"
+            },
+            decelerated: { 
+                name: "Universo Ralentizado", 
+                description: "Tiempo ralentizado", 
+                bonuses: { resource_preservation: 2.0 }, 
+                penalties: { production_speed: 0.3 },
+                color: "#4169E1"
+            },
+            cyclical: { 
+                name: "Universo Cíclico", 
+                description: "Tiempo en bucles", 
+                bonuses: { permanent_upgrades: 1.5 }, 
+                penalties: { periodic_reset: true },
+                color: "#9370DB"
+            },
+            retrograde: { 
+                name: "Universo Retrógrado", 
+                description: "Tiempo inverso", 
+                bonuses: { time_reversal: true }, 
+                penalties: { negative_production: true },
+                color: "#DC143C"
+            }
+        }
+    },
+    conceptual: {
+        name: "Universos Conceptuales",
+        types: {
+            abundance: { 
+                name: "Universo de la Abundancia", 
+                description: "Recursos infinitos", 
+                bonuses: { spontaneous_generation: 5.0 }, 
+                penalties: { economic_instability: true },
+                color: "#32CD32"
+            },
+            scarcity: { 
+                name: "Universo de la Escasez", 
+                description: "Recursos extremadamente raros", 
+                bonuses: { extreme_efficiency: 5.0 }, 
+                penalties: { resource_generation: 0.1 },
+                color: "#2F4F4F"
+            },
+            dreams: { 
+                name: "Universo de los Sueños", 
+                description: "Energía onírica", 
+                bonuses: { dream_energy: 3.0 }, 
+                penalties: { reality_distortion: true },
+                color: "#FF69B4"
+            },
+            inverted_logic: { 
+                name: "Universo de Lógica Invertida", 
+                description: "Efectos opuestos", 
+                bonuses: { paradox_power: 2.0 }, 
+                penalties: { inverted_actions: true },
+                color: "#FF1493"
+            }
+        }
+    },
+    anomalous: {
+        name: "Universos Anómalos",
+        types: {
+            variable_gravity: { 
+                name: "Universo de Gravedad Variable", 
+                description: "Gravedad cambiante", 
+                bonuses: { gravity_manipulation: 1.5 }, 
+                penalties: { unit_instability: true },
+                color: "#B22222"
+            },
+            inverted_colors: { 
+                name: "Universo de Colores Invertidos", 
+                description: "Percepción alterada", 
+                bonuses: { hidden_elements: true }, 
+                penalties: { visual_confusion: true },
+                color: "#000080"
+            },
+            resonance: { 
+                name: "Universo de Resonancia", 
+                description: "Amplificación interdimensional", 
+                bonuses: { effect_amplification: 2.5 }, 
+                penalties: { cross_universe_chaos: true },
+                color: "#FF8C00"
+            },
+            paradox: { 
+                name: "Universo Paradoja", 
+                description: "Paradojas temporales", 
+                bonuses: { temporal_power: 3.0 }, 
+                penalties: { paradox_risk: true },
+                color: "#9400D3"
+            }
+        }
+    }
+};
+
+// Semillas Cuánticas
+const QUANTUM_SEEDS = {
+    basic_quantum_seed: {
+        id: "basic_quantum_seed",
+        name: "Semilla Cuántica Básica",
+        description: "Permite acceso a universos elementales",
+        cost: { quantum_time: 1000, genetic_data: 500 },
+        universeAccess: ["elemental"],
+        rarity: "common"
+    },
+    temporal_quantum_seed: {
+        id: "temporal_quantum_seed",
+        name: "Semilla Cuántica Temporal",
+        description: "Permite acceso a universos temporales",
+        cost: { quantum_time: 5000, genetic_data: 2000, cosmic_knowledge: 100 },
+        universeAccess: ["temporal"],
+        rarity: "rare"
+    },
+    conceptual_quantum_seed: {
+        id: "conceptual_quantum_seed",
+        name: "Semilla Cuántica Conceptual",
+        description: "Permite acceso a universos conceptuales",
+        cost: { quantum_time: 10000, genetic_data: 5000, cosmic_knowledge: 500 },
+        universeAccess: ["conceptual"],
+        rarity: "epic"
+    },
+    anomalous_quantum_seed: {
+        id: "anomalous_quantum_seed",
+        name: "Semilla Cuántica Anómala",
+        description: "Permite acceso a universos anómalos",
+        cost: { quantum_time: 25000, genetic_data: 10000, cosmic_knowledge: 1000, dimensional_energy: 100 },
+        universeAccess: ["anomalous"],
+        rarity: "legendary"
+    },
+    omniversal_quantum_seed: {
+        id: "omniversal_quantum_seed",
+        name: "Semilla Cuántica Omniversal",
+        description: "Permite acceso a todos los tipos de universos",
+        cost: { quantum_time: 100000, genetic_data: 50000, cosmic_knowledge: 5000, dimensional_energy: 1000, reality_essence: 10 },
+        universeAccess: ["elemental", "temporal", "conceptual", "anomalous"],
+        rarity: "mythic"
+    }
+};
+
+// Árbol de Tecnología Multiversal
+const MULTIVERSAL_TECHNOLOGY_TREE = {
+    interdimensional_connection: {
+        name: "Conexión Interdimensional",
+        description: "Tecnologías para conectar y navegar el multiverso",
+        icon: "🌀",
+        technologies: {
+            connection_stabilization: {
+                id: "connection_stabilization",
+                name: "Estabilización de Conexiones",
+                description: "Mejora la estabilidad de las conexiones multiversales",
+                cost: { cosmic_knowledge: 1000, dimensional_energy: 100 },
+                effects: { connection_stability: 1.2 },
+                prerequisites: [],
+                unlocked: false
+            },
+            multiversal_cartography: {
+                id: "multiversal_cartography",
+                name: "Cartografía Multiversal",
+                description: "Permite mapear y predecir nuevas conexiones",
+                cost: { cosmic_knowledge: 2500, quantum_time: 500 },
+                effects: { universe_discovery: 1.5, prediction_accuracy: 1.3 },
+                prerequisites: ["connection_stabilization"],
+                unlocked: false
+            },
+            reality_bridges: {
+                id: "reality_bridges",
+                name: "Puentes de Realidad",
+                description: "Crea conexiones permanentes entre universos distantes",
+                cost: { cosmic_knowledge: 5000, dimensional_energy: 1000, reality_essence: 2 },
+                effects: { permanent_connections: true, distance_ignore: true },
+                prerequisites: ["multiversal_cartography"],
+                unlocked: false
+            },
+            quantum_entanglement_network: {
+                id: "quantum_entanglement_network",
+                name: "Red de Entrelazamiento Cuántico",
+                description: "Conecta instantáneamente todos los universos",
+                cost: { cosmic_knowledge: 10000, dimensional_energy: 5000, reality_essence: 10 },
+                effects: { instant_communication: true, resource_sync: true },
+                prerequisites: ["reality_bridges"],
+                unlocked: false
+            }
+        }
+    },
+    physical_law_manipulation: {
+        name: "Manipulación de Leyes Físicas",
+        description: "Control sobre las fuerzas fundamentales del universo",
+        icon: "⚛️",
+        technologies: {
+            gravitational_control: {
+                id: "gravitational_control",
+                name: "Control Gravitacional",
+                description: "Permite ajustar la gravedad en universos conectados",
+                cost: { cosmic_knowledge: 1500, dimensional_energy: 200 },
+                effects: { gravity_manipulation: true, efficiency_bonus: 1.15 },
+                prerequisites: [],
+                unlocked: false
+            },
+            temporal_modulation: {
+                id: "temporal_modulation",
+                name: "Modulación Temporal",
+                description: "Acelera o ralentiza el tiempo en universos específicos",
+                cost: { cosmic_knowledge: 3000, quantum_time: 1000 },
+                effects: { time_control: true, production_boost: 1.25 },
+                prerequisites: ["gravitational_control"],
+                unlocked: false
+            },
+            constant_reconfiguration: {
+                id: "constant_reconfiguration",
+                name: "Reconfiguración de Constantes",
+                description: "Altera constantes fundamentales como eficiencia energética",
+                cost: { cosmic_knowledge: 7500, dimensional_energy: 2000, reality_essence: 3 },
+                effects: { fundamental_control: true, energy_efficiency: 1.5 },
+                prerequisites: ["temporal_modulation"],
+                unlocked: false
+            },
+            reality_programming: {
+                id: "reality_programming",
+                name: "Programación de la Realidad",
+                description: "Controla completamente las leyes físicas de un universo",
+                cost: { cosmic_knowledge: 15000, dimensional_energy: 10000, reality_essence: 15 },
+                effects: { complete_control: true, custom_physics: true },
+                prerequisites: ["constant_reconfiguration"],
+                unlocked: false
+            }
+        }
+    },
+    multiversal_bioengineering: {
+        name: "Bioingeniería Multiversal",
+        description: "Evolución de la vida a través de las dimensiones",
+        icon: "🧬",
+        technologies: {
+            adaptive_crops: {
+                id: "adaptive_crops",
+                name: "Cultivos Adaptativos",
+                description: "Cultivos que prosperan en cualquier universo",
+                cost: { genetic_data: 2000, cosmic_knowledge: 500 },
+                effects: { universal_growth: true, yield_bonus: 1.3 },
+                prerequisites: [],
+                unlocked: false
+            },
+            interdimensional_creatures: {
+                id: "interdimensional_creatures",
+                name: "Criaturas Interdimensionales",
+                description: "Animales que extraen recursos de múltiples realidades",
+                cost: { genetic_data: 5000, dimensional_energy: 500 },
+                effects: { multiversal_extraction: true, resource_bonus: 1.4 },
+                prerequisites: ["adaptive_crops"],
+                unlocked: false
+            },
+            universal_symbiosis: {
+                id: "universal_symbiosis",
+                name: "Simbiosis Universal",
+                description: "Relaciones simbióticas entre unidades y universos",
+                cost: { genetic_data: 10000, cosmic_knowledge: 2000, reality_essence: 5 },
+                effects: { symbiotic_bonus: 2.0, universe_harmony: true },
+                prerequisites: ["interdimensional_creatures"],
+                unlocked: false
+            },
+            life_genesis_matrix: {
+                id: "life_genesis_matrix",
+                name: "Matriz de Génesis Vital",
+                description: "Crea vida en universos estériles",
+                cost: { genetic_data: 25000, dimensional_energy: 5000, reality_essence: 20 },
+                effects: { life_creation: true, universe_transformation: true },
+                prerequisites: ["universal_symbiosis"],
+                unlocked: false
+            }
+        }
+    },
+    multiversal_defense: {
+        name: "Defensa Multiversal",
+        description: "Protección contra amenazas interdimensionales",
+        icon: "🛡️",
+        technologies: {
+            reality_shields: {
+                id: "reality_shields",
+                name: "Escudos de Realidad",
+                description: "Protege contra efectos adversos de anomalías",
+                cost: { cosmic_knowledge: 1200, dimensional_energy: 300 },
+                effects: { anomaly_resistance: 1.5, stability_bonus: 1.2 },
+                prerequisites: [],
+                unlocked: false
+            },
+            entity_repellents: {
+                id: "entity_repellents",
+                name: "Repelentes de Entidades",
+                description: "Tecnologías para repeler criaturas interdimensionales",
+                cost: { cosmic_knowledge: 2500, dimensional_energy: 800 },
+                effects: { entity_protection: true, invasion_resistance: 2.0 },
+                prerequisites: ["reality_shields"],
+                unlocked: false
+            },
+            paradox_restoration: {
+                id: "paradox_restoration",
+                name: "Restauración de Paradojas",
+                description: "Resuelve paradojas temporales y restaura estabilidad",
+                cost: { cosmic_knowledge: 5000, quantum_time: 2000, reality_essence: 5 },
+                effects: { paradox_immunity: true, temporal_stability: 2.0 },
+                prerequisites: ["entity_repellents"],
+                unlocked: false
+            },
+            dimensional_fortress: {
+                id: "dimensional_fortress",
+                name: "Fortaleza Dimensional",
+                description: "Protección absoluta contra todas las amenazas multiversales",
+                cost: { cosmic_knowledge: 12000, dimensional_energy: 5000, reality_essence: 25 },
+                effects: { absolute_protection: true, threat_immunity: true },
+                prerequisites: ["paradox_restoration"],
+                unlocked: false
+            }
+        }
+    },
+    nexus_enhancement: {
+        name: "Mejora del Nexus",
+        description: "Expansión y optimización del Nexus Central",
+        icon: "🏗️",
+        technologies: {
+            monitoring_enhancement: {
+                id: "monitoring_enhancement",
+                name: "Mejora de Monitorización",
+                description: "Sistemas avanzados de monitoreo multiversal",
+                cost: { cosmic_knowledge: 800, dimensional_energy: 150 },
+                effects: { monitoring_range: 2.0, detection_accuracy: 1.5 },
+                prerequisites: [],
+                unlocked: false
+            },
+            quantum_storage_expansion: {
+                id: "quantum_storage_expansion",
+                name: "Expansión de Almacenamiento Cuántico",
+                description: "Aumenta la capacidad del almacenamiento cuántico",
+                cost: { cosmic_knowledge: 1500, dimensional_energy: 500 },
+                effects: { storage_capacity: 2.0, storage_efficiency: 1.3 },
+                prerequisites: ["monitoring_enhancement"],
+                unlocked: false
+            },
+            temporal_synchronization: {
+                id: "temporal_synchronization",
+                name: "Sincronización Temporal",
+                description: "Sincroniza el tiempo entre universos conectados",
+                cost: { cosmic_knowledge: 3000, quantum_time: 1500 },
+                effects: { time_sync: true, efficiency_harmony: 1.4 },
+                prerequisites: ["quantum_storage_expansion"],
+                unlocked: false
+            },
+            nexus_ascension: {
+                id: "nexus_ascension",
+                name: "Ascensión del Nexus",
+                description: "Transforma el Nexus en una entidad multiversal",
+                cost: { cosmic_knowledge: 20000, dimensional_energy: 10000, reality_essence: 50 },
+                effects: { nexus_consciousness: true, multiversal_awareness: true },
+                prerequisites: ["temporal_synchronization"],
+                unlocked: false
+            }
+        }
+    },
+    reality_cultivation: {
+        name: "Cultivo de Realidades",
+        description: "El arte de sembrar y cultivar universos completos",
+        icon: "🌱",
+        technologies: {
+            universe_seeding: {
+                id: "universe_seeding",
+                name: "Sembrado de Universos",
+                description: "Introduce vida básica en universos estériles",
+                cost: { genetic_data: 3000, cosmic_knowledge: 1000, reality_essence: 2 },
+                effects: { basic_terraforming: true, life_introduction: 1.2 },
+                prerequisites: [],
+                unlocked: false
+            },
+            ecosystem_engineering: {
+                id: "ecosystem_engineering",
+                name: "Ingeniería de Ecosistemas",
+                description: "Diseña ecosistemas complejos para universos",
+                cost: { genetic_data: 8000, cosmic_knowledge: 3000, reality_essence: 8 },
+                effects: { ecosystem_design: true, biodiversity_bonus: 1.5 },
+                prerequisites: ["universe_seeding"],
+                unlocked: false
+            },
+            civilization_cultivation: {
+                id: "civilization_cultivation",
+                name: "Cultivo de Civilizaciones",
+                description: "Guía el desarrollo de civilizaciones inteligentes",
+                cost: { genetic_data: 15000, cosmic_knowledge: 8000, reality_essence: 20 },
+                effects: { civilization_guidance: true, intelligence_amplification: 2.0 },
+                prerequisites: ["ecosystem_engineering"],
+                unlocked: false
+            },
+            reality_garden_mastery: {
+                id: "reality_garden_mastery",
+                name: "Maestría del Jardín de Realidades",
+                description: "Dominio completo sobre el cultivo multiversal",
+                cost: { genetic_data: 50000, cosmic_knowledge: 25000, dimensional_energy: 15000, reality_essence: 100 },
+                effects: { garden_mastery: true, infinite_cultivation: true },
+                prerequisites: ["civilization_cultivation"],
+                unlocked: false
+            }
+        }
+    }
+};
+
+// Unidades Multiversales especializadas
+const MULTIVERSAL_UNITS = {
+    dimensional_harvester: {
+        id: "dimensional_harvester",
+        name: "Cosechador Dimensional",
+        description: "Extrae recursos de un universo y los transporta a otro",
+        era: 13, // Era Multiversal
+        tier: 6,
+        baseCost: { credits: 1e50, dimensional_energy: 1000, cosmic_knowledge: 500 },
+        costMultiplier: 1.2,
+        baseProduction: 1e12,
+        productionType: "multiversal_transfer",
+        globalEffect: { resource_transfer_rate: 1.3 },
+        requirements: { technology: ["interdimensional_connection"] },
+        universeTypes: ["all"]
+    },
+    adaptive_ecosystem_farm: {
+        id: "adaptive_ecosystem_farm",
+        name: "Granja de Ecosistemas Adaptativos",
+        description: "Se adapta automáticamente a las leyes físicas del universo",
+        era: 13,
+        tier: 6,
+        baseCost: { credits: 5e50, genetic_data: 5000, cosmic_knowledge: 1000 },
+        costMultiplier: 1.25,
+        baseProduction: 5e12,
+        productionType: "adaptive_production",
+        globalEffect: { universe_adaptation: 1.5 },
+        requirements: { technology: ["adaptive_crops"] },
+        universeTypes: ["all"]
+    },
+    temporal_synchronizer: {
+        id: "temporal_synchronizer",
+        name: "Sincronizador Temporal",
+        description: "Alinea el flujo temporal entre universos conectados",
+        era: 13,
+        tier: 6,
+        baseCost: { credits: 1e51, quantum_time: 10000, dimensional_energy: 2000 },
+        costMultiplier: 1.3,
+        baseProduction: 0, // No produce recursos directamente
+        productionType: "temporal_alignment",
+        globalEffect: { temporal_efficiency: 1.8 },
+        requirements: { technology: ["temporal_modulation"] },
+        universeTypes: ["temporal", "all"]
+    },
+    reality_constructor: {
+        id: "reality_constructor",
+        name: "Constructor de Realidades",
+        description: "Siembra nuevas propiedades en universos existentes",
+        era: 13,
+        tier: 6,
+        baseCost: { credits: 1e52, reality_essence: 50, cosmic_knowledge: 5000 },
+        costMultiplier: 1.4,
+        baseProduction: 0,
+        productionType: "reality_modification",
+        globalEffect: { universe_enhancement: 2.0 },
+        requirements: { technology: ["reality_programming"] },
+        universeTypes: ["all"]
+    },
+    nexus_expansion_module: {
+        id: "nexus_expansion_module",
+        name: "Módulo de Expansión del Nexus",
+        description: "Expande las capacidades del Nexus Central",
+        era: 13,
+        tier: 6,
+        baseCost: { credits: 5e52, dimensional_energy: 10000, cosmic_knowledge: 10000 },
+        costMultiplier: 1.5,
+        baseProduction: 0,
+        productionType: "nexus_enhancement",
+        globalEffect: { nexus_efficiency: 2.5 },
+        requirements: { technology: ["nexus_ascension"] },
+        universeTypes: ["nexus"]
+    },
+    multiversal_life_seeder: {
+        id: "multiversal_life_seeder",
+        name: "Sembrador de Vida Multiversal",
+        description: "Introduce vida en universos estériles",
+        era: 13,
+        tier: 6,
+        baseCost: { credits: 1e53, genetic_data: 25000, reality_essence: 100 },
+        costMultiplier: 1.6,
+        baseProduction: 0,
+        productionType: "life_seeding",
+        globalEffect: { universe_vitality: 3.0 },
+        requirements: { technology: ["life_genesis_matrix"] },
+        universeTypes: ["sterile", "dead"]
+    }
+};
+
+// Sistema de Prestigio Multiversal
+const MULTIVERSAL_PRESTIGE = {
+    reality_essence_prestige: {
+        id: "reality_essence_prestige",
+        name: "Prestigio de Esencia de Realidad",
+        description: "Trasciende las limitaciones de una sola realidad",
+        currency: "reality_essence",
+        requirements: {
+            connected_universes: 10,
+            total_seeds_planted: 100,
+            multiversal_production: 1e60
+        },
+        rewards: {
+            base_multiplier: 10,
+            reality_essence_gain: 1000,
+            permanent_bonuses: {
+                multiversal_production: 1.5,
+                universe_stability: 1.3,
+                anomaly_resistance: 1.2
+            }
+        }
+    }
+};
+
+// Árbol de Ascensión Multiversal
+const MULTIVERSAL_ASCENSION_TREE = {
+    interdimensional_production: {
+        id: "interdimensional_production",
+        name: "Producción Interdimensional",
+        description: "Aumenta la producción en todos los universos conectados",
+        cost: { reality_essence: 10 },
+        maxLevel: 50,
+        effect: (level) => ({ multiversal_production: 1 + (level * 0.1) }),
+        unlocked: true
+    },
+    physical_law_cost_reduction: {
+        id: "physical_law_cost_reduction",
+        name: "Reducción de Costos MLF",
+        description: "Disminuye el costo de manipular leyes físicas",
+        cost: { reality_essence: 15 },
+        maxLevel: 25,
+        effect: (level) => ({ mlf_cost_reduction: 1 - (level * 0.02) }),
+        prerequisites: ["interdimensional_production"],
+        unlocked: false
+    },
+    anomaly_stabilization: {
+        id: "anomaly_stabilization",
+        name: "Estabilización de Anomalías",
+        description: "Reduce la frecuencia y severidad de anomalías",
+        cost: { reality_essence: 20 },
+        maxLevel: 20,
+        effect: (level) => ({ anomaly_reduction: 1 - (level * 0.03) }),
+        prerequisites: ["physical_law_cost_reduction"],
+        unlocked: false
+    },
+    permanent_connection_enhancement: {
+        id: "permanent_connection_enhancement",
+        name: "Mejora de Conexiones Permanentes",
+        description: "Aumenta la velocidad de transferencia de recursos",
+        cost: { reality_essence: 25 },
+        maxLevel: 30,
+        effect: (level) => ({ transfer_rate: 1 + (level * 0.05) }),
+        prerequisites: ["anomaly_stabilization"],
+        unlocked: false
+    },
+    quantum_seed_mastery: {
+        id: "quantum_seed_mastery",
+        name: "Maestría de Semillas Cuánticas",
+        description: "Desbloquea nuevos tipos de semillas cuánticas",
+        cost: { reality_essence: 50 },
+        maxLevel: 10,
+        effect: (level) => ({ new_seed_types: level }),
+        prerequisites: ["permanent_connection_enhancement"],
+        unlocked: false
+    },
+    prestige_synchronization: {
+        id: "prestige_synchronization",
+        name: "Sincronización de Prestigio",
+        description: "Los beneficios de otros prestigios se aplican mejor en el multiverso",
+        cost: { reality_essence: 100 },
+        maxLevel: 5,
+        effect: (level) => ({ prestige_amplification: 1 + (level * 0.2) }),
+        prerequisites: ["quantum_seed_mastery"],
+        unlocked: false
+    }
+};
+
 // Exportar datos del juego
 window.GameData = {
     ERAS,
@@ -1402,5 +2053,12 @@ window.GameData = {
     ACHIEVEMENTS,
     DYNAMIC_EVENTS,
     PRESTIGE_SYSTEMS,
-    INITIAL_GAME_STATE
+    INITIAL_GAME_STATE,
+    MULTIVERSAL_RESOURCES,
+    UNIVERSE_TYPES,
+    QUANTUM_SEEDS,
+    MULTIVERSAL_TECHNOLOGY_TREE,
+    MULTIVERSAL_UNITS,
+    MULTIVERSAL_PRESTIGE,
+    MULTIVERSAL_ASCENSION_TREE
 };
