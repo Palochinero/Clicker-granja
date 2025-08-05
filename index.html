@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro-Empire: De Granja a Imperio Galáctico</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Header con información principal -->
+        <header class="game-header">
+            <div class="era-progress">
+                <h1 id="era-title">Era 1: Granja Familiar</h1>
+                <div class="era-bar">
+                    <div class="era-fill" id="era-progress"></div>
+                </div>
+                <span id="era-level">Nivel 1</span>
+            </div>
+            <div class="resources-panel">
+                <div class="resource" id="credits-display">
+                    <span class="resource-icon">💰</span>
+                    <span class="resource-amount" id="credits">0</span>
+                    <span class="resource-label">Créditos</span>
+                </div>
+                <div class="resource" id="biomass-display">
+                    <span class="resource-icon">🌱</span>
+                    <span class="resource-amount" id="biomass">0</span>
+                    <span class="resource-label">Biomasa</span>
+                </div>
+                <div class="resource" id="energy-display">
+                    <span class="resource-icon">⚡</span>
+                    <span class="resource-amount" id="energy">0</span>
+                    <span class="resource-label">Energía</span>
+                </div>
+                <div class="resource" id="knowledge-display">
+                    <span class="resource-icon">🧬</span>
+                    <span class="resource-amount" id="knowledge">0</span>
+                    <span class="resource-label">Conocimiento</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Panel principal de juego -->
+        <main class="game-main">
+            <!-- Panel izquierdo: Acción principal y estadísticas -->
+            <section class="main-panel">
+                <div class="click-area">
+                    <div class="farm-display">
+                        <canvas id="farm-canvas" width="400" height="300"></canvas>
+                    </div>
+                    <button id="main-click-btn" class="main-click-button">
+                        <span class="click-text">Cosechar</span>
+                        <span class="click-value">+1 Crédito</span>
+                    </button>
+                </div>
+                
+                <div class="stats-panel">
+                    <div class="stat">
+                        <span class="stat-label">Producción/seg:</span>
+                        <span class="stat-value" id="production-rate">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Total producido:</span>
+                        <span class="stat-value" id="total-produced">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Clics realizados:</span>
+                        <span class="stat-value" id="total-clicks">0</span>
+                    </div>
+                </div>
+
+                <!-- Panel de narrativa -->
+                <div class="narrative-panel">
+                    <h3>📜 Historia</h3>
+                    <div id="narrative-text" class="narrative-content">
+                        Has heredado una pequeña parcela de tierra de tu abuela Elara. 
+                        Con el mundo enfrentando una crisis alimentaria, cada semilla cuenta. 
+                        ¿Podrás construir un imperio que alimente a la galaxia?
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel derecho: Pestañas de juego -->
+            <section class="side-panel">
+                <nav class="tabs">
+                    <button class="tab active" data-tab="units">🏭 Unidades</button>
+                    <button class="tab" data-tab="upgrades">⬆️ Mejoras</button>
+                    <button class="tab" data-tab="research">🔬 Investigación</button>
+                    <button class="tab" data-tab="prestige">✨ Prestigio</button>
+                    <button class="tab" data-tab="achievements">🏆 Logros</button>
+                    <button class="tab" data-tab="settings">⚙️ Opciones</button>
+                </nav>
+
+                <!-- Contenido de pestañas -->
+                <div class="tab-content">
+                    <!-- Pestaña de Unidades -->
+                    <div id="units-tab" class="tab-panel active">
+                        <h3>🏭 Unidades de Producción</h3>
+                        <div id="units-list" class="units-container">
+                            <!-- Las unidades se generarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Mejoras -->
+                    <div id="upgrades-tab" class="tab-panel">
+                        <h3>⬆️ Mejoras</h3>
+                        <div id="upgrades-list" class="upgrades-container">
+                            <!-- Las mejoras se generarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Investigación -->
+                    <div id="research-tab" class="tab-panel">
+                        <h3>🔬 Investigación y Tecnología</h3>
+                        <div class="research-branches">
+                            <div class="branch-selector">
+                                <button class="branch-btn active" data-branch="biology">🧬 Biología</button>
+                                <button class="branch-btn" data-branch="technology">🤖 Tecnología</button>
+                                <button class="branch-btn" data-branch="space">🚀 Espacial</button>
+                                <button class="branch-btn" data-branch="economy">💼 Economía</button>
+                            </div>
+                            <div id="tech-tree" class="tech-tree">
+                                <!-- El árbol de tecnología se generará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Prestigio -->
+                    <div id="prestige-tab" class="tab-panel">
+                        <h3>✨ Prestigio Multi-Dimensional</h3>
+                        <div class="prestige-options">
+                            <div class="prestige-type">
+                                <h4>⏰ Semillas del Tiempo</h4>
+                                <p>Reinicia con conocimiento temporal</p>
+                                <button class="prestige-btn" data-type="temporal" disabled>
+                                    Requiere Era 12
+                                </button>
+                            </div>
+                            <div class="prestige-type">
+                                <h4>🌌 Expansión Cósmica</h4>
+                                <p>Comienza en un nuevo planeta</p>
+                                <button class="prestige-btn" data-type="spatial" disabled>
+                                    Requiere 10 planetas
+                                </button>
+                            </div>
+                            <div class="prestige-type">
+                                <h4>🧬 Evolución Dirigida</h4>
+                                <p>Mejora genética permanente</p>
+                                <button class="prestige-btn" data-type="genetic" disabled>
+                                    Requiere biotecnología completa
+                                </button>
+                            </div>
+                            <div class="prestige-type">
+                                <h4>💰 Monopolio Universal</h4>
+                                <p>Conexiones comerciales eternas</p>
+                                <button class="prestige-btn" data-type="economic" disabled>
+                                    Requiere control de mercado
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Logros -->
+                    <div id="achievements-tab" class="tab-panel">
+                        <h3>🏆 Logros y Recompensas</h3>
+                        <div class="achievement-categories">
+                            <button class="achievement-filter active" data-filter="all">Todos</button>
+                            <button class="achievement-filter" data-filter="progress">Progresión</button>
+                            <button class="achievement-filter" data-filter="challenge">Desafío</button>
+                            <button class="achievement-filter" data-filter="collection">Colección</button>
+                        </div>
+                        <div id="achievements-list" class="achievements-container">
+                            <!-- Los logros se generarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Opciones -->
+                    <div id="settings-tab" class="tab-panel">
+                        <h3>⚙️ Opciones del Juego</h3>
+                        <div class="settings-group">
+                            <h4>🔊 Audio</h4>
+                            <label>
+                                <input type="checkbox" id="sound-enabled" checked>
+                                Efectos de sonido
+                            </label>
+                            <label>
+                                <input type="checkbox" id="music-enabled" checked>
+                                Música de fondo
+                            </label>
+                        </div>
+                        <div class="settings-group">
+                            <h4>🎮 Juego</h4>
+                            <label>
+                                <input type="checkbox" id="auto-save" checked>
+                                Guardado automático
+                            </label>
+                            <label>
+                                <input type="checkbox" id="notifications" checked>
+                                Notificaciones
+                            </label>
+                            <label>
+                                <input type="checkbox" id="scientific-notation">
+                                Notación científica
+                            </label>
+                        </div>
+                        <div class="settings-group">
+                            <h4>💾 Datos</h4>
+                            <button id="save-game" class="settings-btn">Guardar Partida</button>
+                            <button id="load-game" class="settings-btn">Cargar Partida</button>
+                            <button id="export-save" class="settings-btn">Exportar</button>
+                            <button id="import-save" class="settings-btn">Importar</button>
+                            <button id="reset-game" class="settings-btn danger">Reiniciar Todo</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Panel de notificaciones -->
+        <div id="notifications" class="notifications-container"></div>
+
+        <!-- Modal para eventos especiales -->
+        <div id="event-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 id="event-title"></h3>
+                <p id="event-description"></p>
+                <div id="event-actions" class="modal-actions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts del juego -->
+    <script src="js/utils.js"></script>
+    <script src="js/gameData.js"></script>
+    <script src="js/gameEngine.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
