@@ -67,6 +67,92 @@ const ERAS = {
         backgroundGradient: "linear-gradient(135deg, #2a4a5a, #1a3a4a)",
         mainResource: "credits",
         nextEra: 6
+    },
+    
+    // ERAS AVANZADAS 6-12
+    6: {
+        id: 6,
+        name: "Pionero Oceánico",
+        description: "Domina los océanos y explora las profundidades",
+        minLevel: 101,
+        maxLevel: 130,
+        requiredCredits: 1e18,
+        theme: "oceanic",
+        backgroundGradient: "linear-gradient(135deg, #0077be, #004d7a)",
+        mainResource: "marine_biomass",
+        nextEra: 7
+    },
+    7: {
+        id: 7,
+        name: "Arquitecto Vertical",
+        description: "Granjas verticales en megaciudades",
+        minLevel: 131,
+        maxLevel: 165,
+        requiredCredits: 1e24,
+        theme: "vertical",
+        backgroundGradient: "linear-gradient(135deg, #c0392b, #8b2c1a)",
+        mainResource: "urban_space",
+        nextEra: 8
+    },
+    8: {
+        id: 8,
+        name: "Señor del Clima",
+        description: "Manipulación climática global",
+        minLevel: 166,
+        maxLevel: 200,
+        requiredCredits: 1e29,
+        theme: "climate",
+        backgroundGradient: "linear-gradient(135deg, #8e44ad, #663399)",
+        mainResource: "atmospheric_control",
+        nextEra: 9
+    },
+    9: {
+        id: 9,
+        name: "Bioingeniería Extrema",
+        description: "Crear nuevas formas de vida",
+        minLevel: 201,
+        maxLevel: 240,
+        requiredCredits: 1e34,
+        theme: "bioengineering",
+        backgroundGradient: "linear-gradient(135deg, #e74c3c, #c0392b)",
+        mainResource: "synthetic_dna",
+        nextEra: 10
+    },
+    10: {
+        id: 10,
+        name: "Conquistador Orbital",
+        description: "Agricultura en estaciones espaciales",
+        minLevel: 241,
+        maxLevel: 285,
+        requiredCredits: 1e39,
+        theme: "orbital",
+        backgroundGradient: "linear-gradient(135deg, #2c3e50, #1a252f)",
+        mainResource: "space_materials",
+        nextEra: 11
+    },
+    11: {
+        id: 11,
+        name: "Colonizador Planetario",
+        description: "Terraformación y agricultura planetaria",
+        minLevel: 286,
+        maxLevel: 335,
+        requiredCredits: 1e44,
+        theme: "planetary",
+        backgroundGradient: "linear-gradient(135deg, #d35400, #a04000)",
+        mainResource: "terraforming_tech",
+        nextEra: 12
+    },
+    12: {
+        id: 12,
+        name: "Emperador Galáctico",
+        description: "Control de la agricultura galáctica",
+        minLevel: 336,
+        maxLevel: 400,
+        requiredCredits: 1e49,
+        theme: "galactic",
+        backgroundGradient: "linear-gradient(135deg, #f39c12, #d68910)",
+        mainResource: "stellar_energy",
+        nextEra: null
     }
 };
 
@@ -272,6 +358,372 @@ const PRODUCTION_UNITS = {
         globalEffect: {
             type: "all_production",
             multiplier: 1.15
+        }
+    },
+    
+    // ==========================================
+    // ERAS AVANZADAS 6-12: UNIDADES MEGA
+    // ==========================================
+    
+    // ERA 6: PIONERO OCEÁNICO
+    "aquaculture_complex": {
+        id: "aquaculture_complex",
+        name: "Complejo Acuícola Masivo",
+        description: "Granjas marinas de escala industrial en plataformas flotantes",
+        icon: "🏭",
+        era: 6,
+        tier: 4,
+        baseCost: 1e12,
+        baseProduction: 25000000,
+        costMultiplier: 1.35,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 1800,
+        maxOwned: 200,
+        requirements: {
+            era: 6,
+            technology: "oceanic_engineering"
+        },
+        produces: {
+            credits: 25000000,
+            marine_biomass: 10000,
+            knowledge: 5000
+        }
+    },
+    "deep_sea_harvester": {
+        id: "deep_sea_harvester",
+        name: "Cosechador de Aguas Profundas",
+        description: "Extrae recursos del fondo oceánico y cultiva especies abisales",
+        icon: "🌊",
+        era: 6,
+        tier: 4,
+        baseCost: 5e12,
+        baseProduction: 125000000,
+        costMultiplier: 1.40,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 3600,
+        maxOwned: 50,
+        requirements: {
+            era: 6,
+            unitsOwned: { aquaculture_complex: 25 }
+        },
+        produces: {
+            credits: 125000000,
+            marine_biomass: 50000,
+            exotic_materials: 100
+        }
+    },
+    
+    // ERA 7: ARQUITECTO VERTICAL
+    "vertical_farm_tower": {
+        id: "vertical_farm_tower",
+        name: "Torre de Cultivo Vertical",
+        description: "Rascacielos agrícola de 100 pisos con sistemas hidropónicos avanzados",
+        icon: "🏗️",
+        era: 7,
+        tier: 4,
+        baseCost: 1e17,
+        baseProduction: 625000000,
+        costMultiplier: 1.45,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 7200,
+        maxOwned: 100,
+        requirements: {
+            era: 7,
+            technology: "megastructure_engineering"
+        },
+        produces: {
+            credits: 625000000,
+            urban_space: 25000,
+            construction_materials: 1000
+        }
+    },
+    "atmospheric_processor": {
+        id: "atmospheric_processor",
+        name: "Procesador Atmosférico",
+        description: "Convierte CO2 urbano en oxígeno y nutrientes para las plantas",
+        icon: "🌪️",
+        era: 7,
+        tier: 4,
+        baseCost: 5e17,
+        baseProduction: 3125000000,
+        costMultiplier: 1.50,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 14400,
+        maxOwned: 25,
+        requirements: {
+            era: 7,
+            unitsOwned: { vertical_farm_tower: 50 }
+        },
+        produces: {
+            credits: 3125000000,
+            fusion_energy: 100000,
+            atmospheric_control: 500
+        }
+    },
+    
+    // ERA 8: SEÑOR DEL CLIMA
+    "global_weather_controller": {
+        id: "global_weather_controller",
+        name: "Controlador Climático Global",
+        description: "Red de satélites que modifica patrones climáticos planetarios",
+        icon: "⛈️",
+        era: 8,
+        tier: 5,
+        baseCost: 1e22,
+        baseProduction: 15625000000,
+        costMultiplier: 1.55,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 28800,
+        maxOwned: 50,
+        requirements: {
+            era: 8,
+            technology: "planetary_climate_control"
+        },
+        produces: {
+            credits: 15625000000,
+            climate_technology: 50000,
+            satellite_network: 2500
+        },
+        globalEffect: {
+            type: "all_production",
+            multiplier: 2.0
+        }
+    },
+    "storm_generator": {
+        id: "storm_generator",
+        name: "Generador de Tormentas",
+        description: "Crea tormentas controladas para irrigación masiva y energía",
+        icon: "⚡",
+        era: 8,
+        tier: 5,
+        baseCost: 5e22,
+        baseProduction: 78125000000,
+        costMultiplier: 1.60,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 43200,
+        maxOwned: 10,
+        requirements: {
+            era: 8,
+            unitsOwned: { global_weather_controller: 25 }
+        },
+        produces: {
+            credits: 78125000000,
+            atmospheric_control: 250000,
+            fusion_energy: 500000
+        }
+    },
+    
+    // ERA 9: BIOINGENIERÍA EXTREMA
+    "life_genesis_chamber": {
+        id: "life_genesis_chamber",
+        name: "Cámara de Génesis Vital",
+        description: "Laboratorio cuántico que diseña y crea formas de vida completamente nuevas",
+        icon: "🧬",
+        era: 9,
+        tier: 5,
+        baseCost: 1e27,
+        baseProduction: 390625000000,
+        costMultiplier: 1.65,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 86400,
+        maxOwned: 25,
+        requirements: {
+            era: 9,
+            technology: "quantum_biology"
+        },
+        produces: {
+            credits: 390625000000,
+            synthetic_dna: 125000,
+            designed_organisms: 10000
+        }
+    },
+    "reality_farm": {
+        id: "reality_farm",
+        name: "Granja de Realidades",
+        description: "Cultiva universos de bolsillo donde las leyes de la biología son maleables",
+        icon: "🌌",
+        era: 9,
+        tier: 5,
+        baseCost: 1e28,
+        baseProduction: 1953125000000,
+        costMultiplier: 1.70,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 172800,
+        maxOwned: 5,
+        requirements: {
+            era: 9,
+            unitsOwned: { life_genesis_chamber: 15 }
+        },
+        produces: {
+            credits: 1953125000000,
+            artificial_ecosystems: 50000,
+            quantum_time: 1000
+        }
+    },
+    
+    // ERA 10: CONQUISTADOR ORBITAL
+    "orbital_agricultural_ring": {
+        id: "orbital_agricultural_ring",
+        name: "Anillo Agrícola Orbital",
+        description: "Megaestructura que rodea planetas enteros con granjas espaciales",
+        icon: "💍",
+        era: 10,
+        tier: 5,
+        baseCost: 1e32,
+        baseProduction: 9765625000000,
+        costMultiplier: 1.75,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 345600,
+        maxOwned: 10,
+        requirements: {
+            era: 10,
+            technology: "megastructure_mastery"
+        },
+        produces: {
+            credits: 9765625000000,
+            space_materials: 250000,
+            orbital_stations: 25000
+        }
+    },
+    "dyson_sphere_agricultural": {
+        id: "dyson_sphere_agricultural",
+        name: "Esfera de Dyson Agrícola",
+        description: "Aprovecha toda la energía de una estrella para agricultura cósmica",
+        icon: "☀️",
+        era: 10,
+        tier: 5,
+        baseCost: 1e34,
+        baseProduction: 48828125000000,
+        costMultiplier: 1.80,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 691200,
+        maxOwned: 2,
+        requirements: {
+            era: 10,
+            unitsOwned: { orbital_agricultural_ring: 5 }
+        },
+        produces: {
+            credits: 48828125000000,
+            stellar_energy: 1000000,
+            artificial_gravity: 100000
+        }
+    },
+    
+    // ERA 11: COLONIZADOR PLANETARIO
+    "planetary_terraformer": {
+        id: "planetary_terraformer",
+        name: "Terraformador Planetario",
+        description: "Transforma mundos estériles en jardines agrícolas perfectos",
+        icon: "🪐",
+        era: 11,
+        tier: 5,
+        baseCost: 1e37,
+        baseProduction: 244140625000000,
+        costMultiplier: 1.85,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 1382400,
+        maxOwned: 50,
+        requirements: {
+            era: 11,
+            technology: "planetary_engineering"
+        },
+        produces: {
+            credits: 244140625000000,
+            terraforming_tech: 500000,
+            planetary_ecosystems: 50000
+        }
+    },
+    "galactic_seed_ship": {
+        id: "galactic_seed_ship",
+        name: "Nave Sembradora Galáctica",
+        description: "Esparce vida y agricultura a través de sistemas estelares",
+        icon: "🚀",
+        era: 11,
+        tier: 5,
+        baseCost: 1e39,
+        baseProduction: 1220703125000000,
+        costMultiplier: 1.90,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 2764800,
+        maxOwned: 10,
+        requirements: {
+            era: 11,
+            unitsOwned: { planetary_terraformer: 25 }
+        },
+        produces: {
+            credits: 1220703125000000,
+            ftl_technology: 100000,
+            quantum_time: 50000
+        }
+    },
+    
+    // ERA 12: EMPERADOR GALÁCTICO
+    "universe_cultivator": {
+        id: "universe_cultivator",
+        name: "Cultivador de Universos",
+        description: "Siembra galaxias enteras con ecosistemas agrícolas trascendentales",
+        icon: "👑",
+        era: 12,
+        tier: 5,
+        baseCost: 1e42,
+        baseProduction: 6103515625000000,
+        costMultiplier: 1.95,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 5529600,
+        maxOwned: 25,
+        requirements: {
+            era: 12,
+            technology: "universal_mastery"
+        },
+        produces: {
+            credits: 6103515625000000,
+            stellar_energy: 5000000,
+            quantum_reality: 250000
+        },
+        globalEffect: {
+            type: "all_production",
+            multiplier: 10.0
+        }
+    },
+    "entropy_manipulator": {
+        id: "entropy_manipulator",
+        name: "Manipulador de Entropía",
+        description: "Controla la decadencia universal para preservar la vida eterna",
+        icon: "♾️",
+        era: 12,
+        tier: 5,
+        baseCost: 1e45,
+        baseProduction: 30517578125000000,
+        costMultiplier: 2.00,
+        unlocked: false,
+        resourceType: "credits",
+        buildTime: 11059200,
+        maxOwned: 5,
+        requirements: {
+            era: 12,
+            unitsOwned: { universe_cultivator: 10 }
+        },
+        produces: {
+            credits: 30517578125000000,
+            alien_civilizations: 1000000,
+            quantum_reality: 1000000
+        },
+        globalEffect: {
+            type: "all_production",
+            multiplier: 100.0
         }
     }
 };

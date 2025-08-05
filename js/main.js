@@ -348,6 +348,50 @@ window.debug = {
                 total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + ' MB'
             } : 'No disponible'
         };
+    },
+    
+    // Funciones específicas de prestigio
+    forcePrestigeAvailable: (type) => {
+        if (gameEngine && gameEngine.prestigeSystem) {
+            const config = GameData.PRESTIGE_SYSTEMS[type];
+            if (config) {
+                config.available = true;
+                config.wasAvailable = true;
+                GameUtils.showNotification(`Prestigio ${type} forzado como disponible`, "warning");
+            }
+        }
+    },
+    
+    // Agregar monedas de prestigio
+    addPrestigeCurrency: (type, amount) => {
+        if (gameEngine && gameEngine.gameState.prestige[type]) {
+            gameEngine.gameState.prestige[type].currency = 
+                (gameEngine.gameState.prestige[type].currency || 0) + amount;
+            GameUtils.showNotification(`Agregadas ${amount} monedas de prestigio ${type}`, "success");
+        }
+    },
+    
+    // Simular prestigio rápido
+    quickPrestige: (type) => {
+        if (gameEngine && gameEngine.prestigeSystem) {
+            debug.forcePrestigeAvailable(type);
+            setTimeout(() => {
+                gameEngine.prestigeSystem.performPrestige(type);
+            }, 100);
+        }
+    },
+    
+    // Información del sistema de prestigio
+    getPrestigeInfo: () => {
+        if (gameEngine && gameEngine.prestigeSystem) {
+            return {
+                availablePrestige: gameEngine.prestigeSystem.getAllPrestigeInfo(),
+                currencies: gameEngine.prestigeSystem.getPrestigeCurrencies(),
+                globalTree: gameEngine.prestigeSystem.getGlobalPrestigeTreeInfo(),
+                history: gameEngine.prestigeSystem.prestigeHistory
+            };
+        }
+        return null;
     }
 };
 

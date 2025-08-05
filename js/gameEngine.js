@@ -10,13 +10,20 @@ class GameEngine {
         this.lastUpdateTime = 0;
         this.updateInterval = null;
         this.autoSaveInterval = null;
+        this.prestigeSystem = null;
         
         // Multiplicadores globales
         this.globalMultipliers = {
             production: 1,
             clickPower: 1,
             cost: 1,
-            research: 1
+            research: 1,
+            timeAcceleration: 1,
+            baseEfficiency: 1,
+            prestigeSpeed: 1,
+            prestigeCostReduction: 1,
+            techCostReduction: 1,
+            tradeRouteBonus: 1
         };
         
         // Sistema de eventos
@@ -186,6 +193,9 @@ class GameEngine {
     }
     
     initializeSystems() {
+        // Inicializar sistema de prestigio
+        this.prestigeSystem = new PrestigeSystem(this);
+        
         // Calcular multiplicadores iniciales
         this.updateGlobalMultipliers();
         
@@ -225,6 +235,11 @@ class GameEngine {
         
         // Verificar condiciones de desbloqueo
         this.checkUnlockConditions();
+        
+        // Actualizar sistema de prestigio
+        if (this.prestigeSystem) {
+            this.prestigeSystem.updatePrestigeAvailability();
+        }
         
         // Actualizar estadísticas del jugador
         this.updatePlayerStats(deltaTime);
@@ -846,11 +861,23 @@ class GameEngine {
     // ==========================================
     
     updateGlobalMultipliers() {
-        // Reiniciar a valores base
+        // Reiniciar valores base (manteniendo prestigio)
+        const prestigeMultipliers = {
+            timeAcceleration: this.globalMultipliers.timeAcceleration || 1,
+            baseEfficiency: this.globalMultipliers.baseEfficiency || 1,
+            prestigeSpeed: this.globalMultipliers.prestigeSpeed || 1,
+            prestigeCostReduction: this.globalMultipliers.prestigeCostReduction || 1,
+            techCostReduction: this.globalMultipliers.techCostReduction || 1,
+            tradeRouteBonus: this.globalMultipliers.tradeRouteBonus || 1
+        };
+        
         this.globalMultipliers.production = 1;
         this.globalMultipliers.clickPower = 1;
         this.globalMultipliers.cost = 1;
         this.globalMultipliers.research = 1;
+        
+        // Restaurar multiplicadores de prestigio
+        Object.assign(this.globalMultipliers, prestigeMultipliers);
         
         // Aplicar efectos de mejoras
         Object.entries(this.gameState.upgrades).forEach(([upgradeId, upgradeData]) => {
@@ -874,16 +901,15 @@ class GameEngine {
             }
         });
         
-        // Aplicar bonificaciones de prestigio
-        Object.entries(this.gameState.prestige).forEach(([type, prestigeData]) => {
-            if (prestigeData.level > 0) {
-                const prestigeConfig = GameData.PRESTIGE_SYSTEMS[type];
-                
-                if (prestigeConfig.rewards.globalSpeedBonus) {
-                    this.globalMultipliers.production *= (1 + prestigeConfig.rewards.globalSpeedBonus * prestigeData.level);
-                }
-            }
-        });
+        // Aplicar multiplicadores de prestigio a producción base
+        this.globalMultipliers.production *= this.globalMultipliers.baseEfficiency;
+        this.globalMultipliers.production *= this.globalMultipliers.prestigeSpeed;
+        this.globalMultipliers.cost *= this.globalMultipliers.prestigeCostReduction;
+        
+        // Aplicar bonificaciones de rutas comerciales pasivas
+        if (this.gameState.passiveTradeRoutes && this.gameState.passiveTradeRoutes.length > 0) {
+            this.globalMultipliers.production *= this.globalMultipliers.tradeRouteBonus;
+        }
     }
     
     // ==========================================

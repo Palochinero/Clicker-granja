@@ -613,7 +613,192 @@ class GameUI {
     }
     
     updatePrestigeTab(gameState) {
-        // This will be implemented when prestige system is added
+        if (!this.elements.prestige || !this.game.prestigeSystem) return;
+        
+        // Limpiar contenido existente
+        const prestigeContainer = document.querySelector('.prestige-options');
+        if (!prestigeContainer) return;
+        
+        prestigeContainer.innerHTML = '';
+        
+        // Obtener información de prestigio
+        const prestigeInfo = this.game.prestigeSystem.getAllPrestigeInfo();
+        const currencies = this.game.prestigeSystem.getPrestigeCurrencies();
+        
+        // Mostrar monedas de prestigio disponibles
+        const currencyDisplay = GameUtils.createElement('div', 'prestige-currencies');
+        currencyDisplay.innerHTML = `
+            <h4>💰 Monedas de Prestigio</h4>
+            <div class="currency-grid">
+                <div class="prestige-currency">
+                    <span class="currency-icon">⏰</span>
+                    <span class="currency-amount">${GameUtils.formatNumber(currencies.temporal_essence)}</span>
+                    <span class="currency-label">Esencia Temporal</span>
+                </div>
+                <div class="prestige-currency">
+                    <span class="currency-icon">🌌</span>
+                    <span class="currency-amount">${GameUtils.formatNumber(currencies.stellar_fragments)}</span>
+                    <span class="currency-label">Fragmentos Estelares</span>
+                </div>
+                <div class="prestige-currency">
+                    <span class="currency-icon">🧬</span>
+                    <span class="currency-amount">${GameUtils.formatNumber(currencies.primordial_sequences)}</span>
+                    <span class="currency-label">Secuencias Primordiales</span>
+                </div>
+                <div class="prestige-currency">
+                    <span class="currency-icon">💰</span>
+                    <span class="currency-amount">${GameUtils.formatNumber(currencies.cosmic_bonds)}</span>
+                    <span class="currency-label">Bonos Cósmicos</span>
+                </div>
+            </div>
+        `;
+        prestigeContainer.appendChild(currencyDisplay);
+        
+        // Mostrar opciones de prestigio
+        prestigeInfo.forEach(prestige => {
+            const prestigeElement = this.createPrestigeElement(prestige);
+            prestigeContainer.appendChild(prestigeElement);
+        });
+        
+        // Mostrar árbol de prestigio global si hay monedas
+        const totalCurrencies = Object.values(currencies).reduce((sum, val) => sum + val, 0);
+        if (totalCurrencies > 0) {
+            this.addGlobalPrestigeTree(prestigeContainer);
+        }
+    }
+    
+    createPrestigeElement(prestige) {
+        const prestigeElement = GameUtils.createElement('div', ['prestige-type', prestige.available ? 'available' : 'locked']);
+        
+        const header = GameUtils.createElement('div', 'prestige-header');
+        header.innerHTML = `
+            <h4>${prestige.icon} ${prestige.name}</h4>
+            <span class="prestige-level">Nivel ${prestige.currentLevel}</span>
+        `;
+        
+        const description = GameUtils.createElement('p', 'prestige-description', {}, prestige.description);
+        
+        const rewards = GameUtils.createElement('div', 'prestige-rewards');
+        if (prestige.available && prestige.nextRewards) {
+            const rewardsList = Object.entries(prestige.nextRewards)
+                .filter(([key, value]) => typeof value === 'number' && value > 0)
+                .map(([key, value]) => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return `<li>${formattedKey}: ${GameUtils.formatNumber(value)}</li>`;
+                })
+                .join('');
+            
+            if (rewardsList) {
+                rewards.innerHTML = `
+                    <h5>Próximas Recompensas:</h5>
+                    <ul>${rewardsList}</ul>
+                `;
+            }
+        }
+        
+        const button = GameUtils.createElement('button', ['prestige-btn'], {}, 
+            prestige.available ? `Realizar Prestigio` : this.getPrestigeRequirementText(prestige));
+        
+        if (prestige.available) {
+            button.addEventListener('click', () => {
+                this.performPrestige(prestige.type);
+            });
+        } else {
+            button.disabled = true;
+        }
+        
+        prestigeElement.appendChild(header);
+        prestigeElement.appendChild(description);
+        prestigeElement.appendChild(rewards);
+        prestigeElement.appendChild(button);
+        
+        return prestigeElement;
+    }
+    
+    getPrestigeRequirementText(prestige) {
+        switch (prestige.type) {
+            case 'temporal':
+                return 'Requiere Era 12 o 1e50 créditos';
+            case 'spatial':
+                return 'Requiere 10 planetas o Era 10';
+            case 'genetic':
+                return 'Requiere biotecnología completa';
+            case 'economic':
+                return 'Requiere 75% control de mercado';
+            default:
+                return 'Requisitos no cumplidos';
+        }
+    }
+    
+    addGlobalPrestigeTree(container) {
+        const treeHeader = GameUtils.createElement('h4', 'global-prestige-header', {}, '🌟 Árbol de Prestigio Global');
+        container.appendChild(treeHeader);
+        
+        const treeInfo = this.game.prestigeSystem.getGlobalPrestigeTreeInfo();
+        const treeContainer = GameUtils.createElement('div', 'global-prestige-tree');
+        
+        treeInfo.forEach(node => {
+            const nodeElement = this.createGlobalPrestigeNode(node);
+            treeContainer.appendChild(nodeElement);
+        });
+        
+        container.appendChild(treeContainer);
+    }
+    
+    createGlobalPrestigeNode(node) {
+        const nodeElement = GameUtils.createElement('div', 
+            ['global-prestige-node', node.canAfford ? 'affordable' : 'locked']);
+        
+        const header = GameUtils.createElement('div', 'node-header');
+        header.innerHTML = `
+            <h5>${node.name}</h5>
+            <span class="node-level">${node.currentLevel}/${node.maxLevel}</span>
+        `;
+        
+        const description = GameUtils.createElement('p', 'node-description', {}, node.description);
+        
+        const cost = GameUtils.createElement('div', 'node-cost');
+        const costText = Object.entries(node.cost)
+            .map(([currency, amount]) => {
+                const formattedCurrency = currency.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return `${GameUtils.formatNumber(amount)} ${formattedCurrency}`;
+            })
+            .join(', ');
+        cost.textContent = `Costo: ${costText}`;
+        
+        const button = GameUtils.createElement('button', ['node-buy-btn'], {}, 
+            node.currentLevel >= node.maxLevel ? 'Máximo' : 'Mejorar');
+        
+        if (node.canAfford && node.currentLevel < node.maxLevel) {
+            button.addEventListener('click', () => {
+                this.purchaseGlobalPrestigeNode(node.id);
+            });
+        } else {
+            button.disabled = true;
+        }
+        
+        nodeElement.appendChild(header);
+        nodeElement.appendChild(description);
+        nodeElement.appendChild(cost);
+        nodeElement.appendChild(button);
+        
+        return nodeElement;
+    }
+    
+    performPrestige(type) {
+        if (this.game.prestigeSystem.performPrestige(type)) {
+            // Actualizar toda la UI después del prestigio
+            setTimeout(() => {
+                this.updateUI();
+            }, 500);
+        }
+    }
+    
+    purchaseGlobalPrestigeNode(nodeId) {
+        if (this.game.prestigeSystem.purchaseGlobalPrestigeNode(nodeId)) {
+            // Actualizar la pestaña de prestigio
+            this.updatePrestigeTab(this.game.getGameState());
+        }
     }
     
     // ==========================================
