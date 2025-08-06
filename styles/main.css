@@ -1709,3 +1709,651 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--light-green);
 }
+
+/* MEJORAS VISUALES Y ANIMACIONES */
+
+/* Efectos de partículas para clics */
+@keyframes click-explosion {
+    0% {
+        transform: scale(0.5) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2) rotate(180deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(2) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.click-particle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 14px;
+    font-weight: bold;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    animation: click-explosion 0.8s ease-out forwards;
+    z-index: 1000;
+}
+
+/* Efecto de hover mejorado para botones */
+.btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+}
+
+/* Efectos de resplandor para elementos importantes */
+.glow-effect {
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+    from {
+        box-shadow: 0 0 5px rgba(0, 255, 136, 0.4);
+    }
+    to {
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.8), 0 0 30px rgba(0, 255, 136, 0.6);
+    }
+}
+
+/* Animaciones de aparición para elementos nuevos */
+@keyframes slide-in-from-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slide-in-from-bottom {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-in {
+    animation: slide-in-from-bottom 0.5s ease-out;
+}
+
+/* Mejoras para el área de clic principal */
+.farm-display {
+    position: relative;
+    background: radial-gradient(circle at center, rgba(0, 255, 136, 0.1), transparent 70%);
+    border: 2px solid rgba(0, 255, 136, 0.3);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.farm-display::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00ff88, #0088ff, #8800ff, #ff0088);
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.farm-display:hover::before {
+    opacity: 1;
+    animation: border-glow 2s linear infinite;
+}
+
+@keyframes border-glow {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.farm-display:active {
+    transform: scale(0.98);
+}
+
+/* Mejoras para las barras de progreso */
+.era-bar, .progress-bar {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.era-fill, .progress-fill {
+    background: linear-gradient(90deg, #00ff88, #00dd77, #00bb66);
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.era-fill::after, .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Notificaciones toast mejoradas */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.9), rgba(0, 136, 255, 0.9));
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: toast-slide-in 0.5s ease-out, toast-slide-out 0.5s ease-in 2.5s forwards;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.toast.success {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.9), rgba(0, 200, 100, 0.9));
+}
+
+.toast.warning {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.9), rgba(255, 152, 0, 0.9));
+}
+
+.toast.error {
+    background: linear-gradient(135deg, rgba(255, 69, 58, 0.9), rgba(255, 45, 85, 0.9));
+}
+
+@keyframes toast-slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toast-slide-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Efectos de loading modernos */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 255, 136, 0.3);
+    border-top: 4px solid #00ff88;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mejoras para las tarjetas de unidades */
+.unit-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.unit-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.unit-item:hover::before {
+    left: 100%;
+}
+
+.unit-item:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+}
+
+/* Efectos de contador de recursos */
+.resource-amount {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.resource-amount.updating {
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    animation: resource-update 0.5s ease-out;
+}
+
+@keyframes resource-update {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Efectos de partículas de fondo */
+.background-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float-particle linear infinite;
+}
+
+@keyframes float-particle {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Efectos para elementos desbloqueados recientemente */
+.newly-unlocked {
+    animation: unlock-glow 2s ease-in-out;
+    border: 2px solid #00ff88;
+}
+
+@keyframes unlock-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 255, 136, 1), 0 0 30px rgba(0, 255, 136, 0.8);
+    }
+}
+
+/* Mejoras responsivas para móviles */
+@media (max-width: 768px) {
+    .toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .toast {
+        margin: 0;
+        max-width: none;
+    }
+    
+    .farm-display {
+        margin: 10px;
+    }
+    
+    .unit-item:hover {
+        transform: none;
+    }
+}
+
+/* Efectos de modo oscuro mejorado */
+@media (prefers-color-scheme: dark) {
+    .glow-effect {
+        animation: glow-pulse-dark 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow-pulse-dark {
+        from {
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.6);
+        }
+        to {
+            box-shadow: 0 0 25px rgba(0, 255, 136, 1), 0 0 35px rgba(0, 255, 136, 0.8);
+        }
+    }
+}
+
+/* Estilos para el panel de estadísticas */
+.stats-section {
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.stats-section h4 {
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 136, 255, 0.1));
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.stat-card:hover::before {
+    left: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 255, 136, 0.2);
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--primary-green);
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.chart-container {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px;
+}
+
+.chart-container canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.records-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-green);
+    transition: all 0.3s ease;
+}
+
+.record-item:hover {
+    background: rgba(0, 255, 136, 0.1);
+    transform: translateX(5px);
+}
+
+.record-label {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.record-value {
+    color: var(--primary-green);
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.save-info {
+    display: grid;
+    gap: 10px;
+}
+
+.save-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.save-label {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.save-value {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* Barra de progreso de logros */
+.progress-section {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.achievement-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.achievement-progress-bar .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-green), var(--light-green));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.achievement-progress-bar .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: progress-shine 2s infinite;
+}
+
+#achievement-progress-text {
+    color: var(--text-primary);
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+/* Mejoras responsivas para estadísticas */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .stat-value {
+        font-size: 1.4em;
+    }
+    
+    .records-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .record-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .chart-container {
+        padding: 10px;
+        min-height: 200px;
+    }
+}
+
+/* Animaciones para las estadísticas */
+@keyframes stat-update {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        color: var(--light-green);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.stat-value.updating {
+    animation: stat-update 0.5s ease-out;
+}
+
+/* Estilos para gráficos de placeholder */
+.chart-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.chart-placeholder::before {
+    content: '📊';
+    font-size: 3em;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}

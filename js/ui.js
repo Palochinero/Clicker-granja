@@ -24,6 +24,9 @@ class GameUI {
         // Obtener referencias a elementos del DOM
         this.cacheElements();
         
+        // Crear sistema de notificaciones
+        this.createNotificationSystem();
+        
         // Configurar event listeners
         this.setupEventListeners();
         
@@ -35,6 +38,11 @@ class GameUI {
         
         // Configurar intervalo de actualización
         this.setupUpdateInterval();
+        
+        // Mostrar notificación de bienvenida
+        setTimeout(() => {
+            this.showNotification('¡Bienvenido a Agro-Empire! 🌱', 'success', 4000);
+        }, 1000);
         
         console.log("✅ Interfaz de usuario inicializada");
     }
@@ -852,7 +860,25 @@ class GameUI {
         const x = event.clientX;
         const y = event.clientY;
         
+        // Calcular el valor del clic antes de realizarlo para mostrar en partícula
+        const clickValue = this.game.calculateClickPower();
+        
+        // Realizar el clic
         this.game.performClick(x, y);
+        
+        // Crear efecto de partícula en la posición del clic
+        this.createClickParticle(x, y, clickValue);
+        
+        // Efecto de vibración sutil en el botón
+        this.elements.mainClickBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.elements.mainClickBtn.style.transform = '';
+        }, 100);
+        
+        // Agregar efecto de resplandor temporal si el clic es grande
+        if (clickValue > 1000) {
+            this.addGlowEffect(this.elements.mainClickBtn);
+        }
     }
     
     handleKeyboardShortcuts(event) {
@@ -1593,6 +1619,148 @@ class GameUI {
     researchTechnology(techId) {
         // Función placeholder para investigar tecnologías
         this.showNotification(`🔬 Investigando tecnología ${techId}...`, 'info');
+    }
+    
+    // ==========================================
+    // SISTEMA DE NOTIFICACIONES Y EFECTOS VISUALES
+    // ==========================================
+    
+    createNotificationSystem() {
+        // Crear contenedor de notificaciones si no existe
+        if (!document.querySelector('.toast-container')) {
+            const container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        
+        // Crear sistema de partículas de fondo
+        this.createBackgroundParticles();
+        
+        console.log("✨ Sistema de notificaciones creado");
+    }
+    
+    showNotification(message, type = 'success', duration = 3000) {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        // Añadir iconos según el tipo
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            error: '❌',
+            info: 'ℹ️'
+        };
+        
+        const icon = document.createElement('span');
+        icon.textContent = icons[type] || icons.info;
+        icon.style.marginRight = '8px';
+        toast.insertBefore(icon, toast.firstChild);
+        
+        container.appendChild(toast);
+        
+        // Auto-remover después del tiempo especificado
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, duration);
+    }
+    
+    createClickParticle(x, y, value) {
+        const particle = document.createElement('div');
+        particle.className = 'click-particle';
+        particle.textContent = `+${this.game.formatNumber(value)}`;
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        
+        document.body.appendChild(particle);
+        
+        // Remover después de la animación
+        setTimeout(() => {
+            if (particle.parentNode) {
+                particle.parentNode.removeChild(particle);
+            }
+        }, 800);
+    }
+    
+    createBackgroundParticles() {
+        const container = document.createElement('div');
+        container.className = 'background-particles';
+        document.body.appendChild(container);
+        
+        // Crear partículas iniciales
+        for (let i = 0; i < 20; i++) {
+            this.createFloatingParticle(container);
+        }
+        
+        // Crear nuevas partículas periódicamente
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                this.createFloatingParticle(container);
+            }
+        }, 2000);
+    }
+    
+    createFloatingParticle(container) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        const size = Math.random() * 6 + 2;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
+        particle.style.animationDelay = `${Math.random() * 2}s`;
+        
+        container.appendChild(particle);
+        
+        // Remover después de la animación
+        setTimeout(() => {
+            if (particle.parentNode) {
+                particle.parentNode.removeChild(particle);
+            }
+        }, 15000);
+    }
+    
+    addGlowEffect(element) {
+        element.classList.add('glow-effect');
+        setTimeout(() => {
+            element.classList.remove('glow-effect');
+        }, 3000);
+    }
+    
+    animateResourceUpdate(elementId, newValue, oldValue) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        element.classList.add('updating');
+        element.textContent = this.game.formatNumber(newValue);
+        
+        // Si el valor aumentó significativamente, mostrar efecto especial
+        if (newValue > oldValue * 1.1) {
+            this.addGlowEffect(element.parentElement);
+        }
+        
+        setTimeout(() => {
+            element.classList.remove('updating');
+        }, 500);
+    }
+    
+    markElementAsNewlyUnlocked(element) {
+        element.classList.add('newly-unlocked', 'animate-in');
+        this.showNotification('¡Nuevo elemento desbloqueado!', 'success');
+        
+        setTimeout(() => {
+            element.classList.remove('newly-unlocked');
+        }, 2000);
+        
+        setTimeout(() => {
+            element.classList.remove('animate-in');
+        }, 500);
     }
     
     // ==========================================

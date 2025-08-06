@@ -485,6 +485,328 @@ function randomChoice(array) {
     return array[Math.floor(Math.random() * array.length)];
 }
 
+// ==========================================
+// SISTEMA DE GUARDADO MEJORADO
+// ==========================================
+
+/**
+ * Comprime el estado del juego para guardarlo en localStorage
+ * @param {Object} gameState - Estado del juego a comprimir
+ * @returns {string} Estado comprimido en base64
+ */
+function compressGameState(gameState) {
+    try {
+        // Eliminar datos temporales antes de comprimir
+        const cleanState = cleanStateForSave(gameState);
+        
+        // Convertir a JSON y comprimir usando LZ-string básico
+        const jsonString = JSON.stringify(cleanState);
+        return simpleCompress(jsonString);
+    } catch (error) {
+        console.error('Error comprimiendo estado del juego:', error);
+        return JSON.stringify(gameState);
+    }
+}
+
+/**
+ * Descomprime el estado del juego desde un string codificado
+ * @param {string} compressedData - Estado comprimido en base64
+ * @returns {Object|null} Estado del juego o null si hay error
+ */
+function decompressGameState(compressedData) {
+    try {
+        // Intentar descomprimir primero
+        const decompressed = simpleDecompress(compressedData);
+        return JSON.parse(decompressed);
+    } catch (error) {
+        // Si falla la descompresión, intentar como JSON normal
+        try {
+            return JSON.parse(compressedData);
+        } catch (parseError) {
+            console.error('Error descomprimiendo estado del juego:', parseError);
+            return null;
+        }
+    }
+}
+
+/**
+ * Limpia el estado del juego para que no incluya datos temporales
+ * @param {Object} gameState - Estado del juego a limpiar
+ * @returns {Object} Estado limpio
+ */
+function cleanStateForSave(gameState) {
+    const cleanState = JSON.parse(JSON.stringify(gameState));
+    
+    // Eliminar datos temporales que no necesitan guardarse
+    if (cleanState.stats) {
+        delete cleanState.stats.clicksThisSession;
+        cleanState.stats.sessionStartTime = Date.now();
+    }
+    
+    // Limpiar eventos activos que pueden haber expirado
+    if (cleanState.events) {
+        cleanState.events.activeEvents = cleanState.events.activeEvents || [];
+    }
+    
+    return cleanState;
+}
+
+/**
+ * Compresión básica usando diccionario de palabras comunes
+ * @param {string} str - String a comprimir
+ * @returns {string} String comprimido en base64
+ */
+function simpleCompress(str) {
+    // Compresión básica usando diccionario de palabras comunes
+    const dictionary = {
+        'credits': '©',
+        'biomass': '♦',
+        'energy': '☼',
+        'knowledge': '◊',
+        'influence': '♠',
+        'quantum_time': '◄',
+        'genetic_data': '►',
+        'reality_essence': '▲',
+        'dimensional_energy': '▼',
+        'cosmic_knowledge': '♣',
+        'totalClicks': 'tc',
+        'totalCreditsEarned': 'tce',
+        'totalUnitsBuilt': 'tub',
+        'currentEra': 'ce',
+        'baseProduction': 'bp',
+        'owned': 'o',
+        'efficiency': 'e',
+        'researched': 'r',
+        'purchased': 'p',
+        'completed': 'c'
+    };
+    
+    let compressed = str;
+    Object.keys(dictionary).forEach(key => {
+        const regex = new RegExp(`"${key}"`, 'g');
+        compressed = compressed.replace(regex, `"${dictionary[key]}"`);
+    });
+    
+    return btoa(compressed);
+}
+
+/**
+ * Descompresión inversa
+ * @param {string} compressed - String comprimido en base64
+ * @returns {string} String descomprimido
+ */
+function simpleDecompress(compressed) {
+    // Descompresión inversa
+    const dictionary = {
+        '©': 'credits',
+        '♦': 'biomass',
+        '☼': 'energy',
+        '◊': 'knowledge',
+        '♠': 'influence',
+        '◄': 'quantum_time',
+        '►': 'genetic_data',
+        '▲': 'reality_essence',
+        '▼': 'dimensional_energy',
+        '♣': 'cosmic_knowledge',
+        'tc': 'totalClicks',
+        'tce': 'totalCreditsEarned',
+        'tub': 'totalUnitsBuilt',
+        'ce': 'currentEra',
+        'bp': 'baseProduction',
+        'o': 'owned',
+        'e': 'efficiency',
+        'r': 'researched',
+        'p': 'purchased',
+        'c': 'completed'
+    };
+    
+    let decompressed = atob(compressed);
+    Object.keys(dictionary).forEach(key => {
+        const regex = new RegExp(`"${key}"`, 'g');
+        decompressed = decompressed.replace(regex, `"${dictionary[key]}"`);
+    });
+    
+    return decompressed;
+}
+
+/**
+ * Crea un backup del estado del juego
+ * @param {Object} gameState - Estado del juego a respaldar
+ * @param {string} backupName - Nombre opcional para el backup (default: null)
+ * @returns {string} Clave del backup creado
+ */
+function createBackup(gameState, backupName = null) {
+    const timestamp = Date.now();
+    const backupKey = backupName || `agro_empire_backup_${timestamp}`;
+    
+    try {
+        const compressed = compressGameState(gameState);
+        localStorage.setItem(backupKey, compressed);
+        
+        // Mantener lista de backups
+        const backups = getBackupList();
+        backups.push({
+            key: backupKey,
+            timestamp: timestamp,
+            name: backupName || `Backup automático ${new Date(timestamp).toLocaleString()}`
+        });
+        
+        // Mantener solo los últimos 10 backups
+        if (backups.length > 10) {
+            const oldBackup = backups.shift();
+            localStorage.removeItem(oldBackup.key);
+        }
+        
+        localStorage.setItem('agro_empire_backups', JSON.stringify(backups));
+        console.log(`💾 Backup creado: ${backupKey}`);
+        return backupKey;
+    } catch (error) {
+        console.error('Error creando backup:', error);
+        return null;
+    }
+}
+
+/**
+ * Obtiene la lista de backups guardados
+ * @returns {Array} Lista de backups
+ */
+function getBackupList() {
+    try {
+        const backups = localStorage.getItem('agro_empire_backups');
+        return backups ? JSON.parse(backups) : [];
+    } catch (error) {
+        console.error('Error obteniendo lista de backups:', error);
+        return [];
+    }
+}
+
+/**
+ * Restaura el estado del juego desde un backup
+ * @param {string} backupKey - Clave del backup a restaurar
+ * @returns {Object|null} Estado del juego restaurado o null
+ */
+function restoreFromBackup(backupKey) {
+    try {
+        const compressed = localStorage.getItem(backupKey);
+        if (!compressed) {
+            throw new Error('Backup no encontrado');
+        }
+        
+        const gameState = decompressGameState(compressed);
+        if (!gameState) {
+            throw new Error('Error descomprimiendo backup');
+        }
+        
+        return gameState;
+    } catch (error) {
+        console.error('Error restaurando backup:', error);
+        return null;
+    }
+}
+
+/**
+ * Crea un backup automático del estado del juego
+ * @param {Object} gameState - Estado del juego a respaldar
+ */
+function autoBackup(gameState) {
+    const lastBackup = localStorage.getItem('agro_empire_last_backup');
+    const now = Date.now();
+    
+    // Crear backup automático cada 30 minutos
+    if (!lastBackup || (now - parseInt(lastBackup)) > 1800000) {
+        createBackup(gameState);
+        localStorage.setItem('agro_empire_last_backup', now.toString());
+    }
+}
+
+/**
+ * Exporta el estado del juego para compartir
+ * @param {Object} gameState - Estado del juego a exportar
+ * @returns {string} Datos exportados en base64
+ */
+function exportSaveForSharing(gameState) {
+    try {
+        const compressed = compressGameState(gameState);
+        const exportData = {
+            version: '2.0',
+            timestamp: Date.now(),
+            data: compressed,
+            checksum: calculateChecksum(compressed)
+        };
+        
+        return btoa(JSON.stringify(exportData));
+    } catch (error) {
+        console.error('Error exportando save:', error);
+        return null;
+    }
+}
+
+/**
+ * Importa el estado del juego desde un string codificado para compartir
+ * @param {string} importString - String codificado a importar
+ * @returns {Object|null} Estado del juego importado o null
+ */
+function importSaveFromSharing(importString) {
+    try {
+        const exportData = JSON.parse(atob(importString));
+        
+        // Verificar checksum
+        if (exportData.checksum !== calculateChecksum(exportData.data)) {
+            throw new Error('Datos corruptos o manipulados');
+        }
+        
+        return decompressGameState(exportData.data);
+    } catch (error) {
+        console.error('Error importando save:', error);
+        return null;
+    }
+}
+
+/**
+ * Calcula un checksum simple para verificar la integridad de los datos
+ * @param {string} data - Datos a verificar
+ * @returns {string} Checksum en base36
+ */
+function calculateChecksum(data) {
+    // Simple checksum para verificar integridad
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+        const char = data.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convertir a 32bit integer
+    }
+    return hash.toString(36);
+}
+
+/**
+ * Obtiene el tamaño del estado del juego (original vs comprimido)
+ * @param {Object} gameState - Estado del juego
+ * @returns {Object} Objeto con tamaños original y comprimido
+ */
+function getSaveSize(gameState) {
+    const jsonSize = JSON.stringify(gameState).length;
+    const compressedSize = compressGameState(gameState).length;
+    
+    return {
+        original: formatBytes(jsonSize),
+        compressed: formatBytes(compressedSize),
+        ratio: Math.round((1 - compressedSize / jsonSize) * 100)
+    };
+}
+
+/**
+ * Formatea bytes a una unidad legible (KB, MB, GB, etc.)
+ * @param {number} bytes - Número de bytes
+ * @returns {string} String con la unidad de medida
+ */
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Exportar funciones principales
 window.GameUtils = {
     formatNumber,
@@ -512,5 +834,16 @@ window.GameUtils = {
     lerp,
     randomBetween,
     randomInt,
-    randomChoice
+    randomChoice,
+    compressGameState,
+    decompressGameState,
+    createBackup,
+    getBackupList,
+    restoreFromBackup,
+    autoBackup,
+    exportSaveForSharing,
+    importSaveFromSharing,
+    calculateChecksum,
+    getSaveSize,
+    formatBytes
 };

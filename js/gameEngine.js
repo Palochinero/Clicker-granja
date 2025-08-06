@@ -12,6 +12,7 @@ class GameEngine {
         this.autoSaveInterval = null;
         this.prestigeSystem = null;
         this.multiverseSystem = null;
+        this.lastAchievementCheck = 0;
         
         // Multiplicadores globales
         this.globalMultipliers = {
@@ -202,6 +203,12 @@ class GameEngine {
             this.multiverseSystem = new MultiverseSystem(this);
         }
         
+        // Inicializar sistema de logros
+        this.initializeAchievements();
+        
+        // Inicializar optimizaciones de rendimiento
+        this.optimizePerformance();
+        
         // Calcular multiplicadores iniciales
         this.updateGlobalMultipliers();
         
@@ -221,11 +228,15 @@ class GameEngine {
         
         const currentTime = performance.now();
         const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convertir a segundos
+        this.lastDeltaTime = deltaTime; // Para actualizaciones escalonadas
         
         if (this.lastUpdateTime === 0) {
             this.lastUpdateTime = currentTime;
             return;
         }
+        
+        // Monitorear rendimiento
+        this.monitorPerformance(currentTime);
         
         // Actualizar producción pasiva
         this.updateProduction(deltaTime);
@@ -252,8 +263,22 @@ class GameEngine {
             this.multiverseSystem.update(deltaTime);
         }
         
+        // Verificar logros (cada 5 segundos para optimizar)
+        if (currentTime - this.lastAchievementCheck > 5000) {
+            this.checkAchievements();
+            this.lastAchievementCheck = currentTime;
+        }
+        
         // Actualizar estadísticas del jugador
         this.updatePlayerStats(deltaTime);
+        
+        // Aplicar actualizaciones por lotes para mejor rendimiento
+        this.applyBatchedUpdates();
+        
+        // Limpieza periódica de memoria
+        if (this.frameCount % 1000 === 0) {
+            this.cleanupMemory();
+        }
         
         this.lastUpdateTime = currentTime;
     }
@@ -688,68 +713,140 @@ class GameEngine {
     // SISTEMA DE LOGROS
     // ==========================================
     
+    initializeAchievements() {
+        // Inicializar logros si no existen
+        if (!this.gameState.achievements) {
+            this.gameState.achievements = {};
+        }
+        
+        // Cargar logros desde gameData.js
+        Object.keys(window.ACHIEVEMENTS || {}).forEach(achievementId => {
+            if (!this.gameState.achievements[achievementId]) {
+                this.gameState.achievements[achievementId] = {
+                    ...window.ACHIEVEMENTS[achievementId],
+                    completed: false,
+                    completedAt: null
+                };
+            }
+        });
+        
+        console.log("🏆 Sistema de logros inicializado");
+    }
+    
     checkAchievements() {
-        Object.entries(GameData.ACHIEVEMENTS).forEach(([achievementId, achievement]) => {
-            const achievementData = this.gameState.achievements[achievementId];
+        let newAchievements = [];
+        
+        Object.keys(window.ACHIEVEMENTS || {}).forEach(achievementId => {
+            const achievement = window.ACHIEVEMENTS[achievementId];
+            const playerAchievement = this.gameState.achievements[achievementId];
             
-            if (!achievementData.completed && this.checkAchievementCondition(achievement)) {
+            if (playerAchievement && !playerAchievement.completed && achievement.condition(this.gameState)) {
                 this.unlockAchievement(achievementId);
+                newAchievements.push(achievement);
+            }
+        });
+        
+        return newAchievements;
+    }
+    
+    unlockAchievement(achievementId) {
+        const achievement = window.ACHIEVEMENTS[achievementId];
+        if (!achievement) return false;
+        
+        // Marcar como completado
+        this.gameState.achievements[achievementId].completed = true;
+        this.gameState.achievements[achievementId].completedAt = Date.now();
+        
+        // Aplicar recompensas
+        this.applyAchievementReward(achievement.reward);
+        
+        // Actualizar estadísticas
+        this.gameState.stats.totalAchievementsUnlocked++;
+        
+        // Mostrar notificación (será manejado por la UI)
+        this.triggerEvent('achievementUnlocked', {
+            achievement: achievement,
+            id: achievementId
+        });
+        
+        console.log(`🏆 Logro desbloqueado: ${achievement.name}`);
+        return true;
+    }
+    
+    applyAchievementReward(reward) {
+        if (!reward) return;
+        
+        // Aplicar recompensas de recursos
+        Object.keys(reward).forEach(rewardType => {
+            const amount = reward[rewardType];
+            
+            switch (rewardType) {
+                case 'credits':
+                case 'biomass':
+                case 'energy':
+                case 'knowledge':
+                case 'influence':
+                case 'quantum_time':
+                case 'genetic_data':
+                case 'reality_essence':
+                case 'dimensional_energy':
+                case 'cosmic_knowledge':
+                    if (this.gameState.resources[rewardType] !== undefined) {
+                        this.gameState.resources[rewardType] += amount;
+                    }
+                    break;
+                    
+                case 'clickPowerBonus':
+                    this.globalMultipliers.clickPower += amount;
+                    break;
+                    
+                case 'productionBonus':
+                    this.globalMultipliers.production += amount;
+                    break;
+                    
+                case 'timeAcceleration':
+                    this.globalMultipliers.timeAcceleration += amount;
+                    break;
+                    
+                case 'prestigeBonus':
+                    this.globalMultipliers.prestigeSpeed += amount;
+                    break;
+                    
+                default:
+                    console.log(`Tipo de recompensa desconocido: ${rewardType}`);
             }
         });
     }
     
-    checkAchievementCondition(achievement) {
-        const condition = achievement.condition;
-        
-        switch (condition.type) {
-            case 'clicks':
-                return this.gameState.stats.totalClicks >= condition.value;
-                
-            case 'total_credits':
-                return this.gameState.stats.totalCreditsEarned >= condition.value;
-                
-            case 'units_owned':
-                const totalUnits = Object.values(this.gameState.units)
-                    .reduce((sum, unit) => sum + unit.owned, 0);
-                return totalUnits >= condition.value;
-                
-            case 'era_reached':
-                return this.gameState.player.currentEra >= condition.value;
-                
-            case 'technologies_researched':
-                const researchedCount = Object.values(this.gameState.technologies)
-                    .filter(tech => tech.researched).length;
-                return researchedCount >= condition.value;
-                
-            default:
-                return false;
-        }
+    getCompletedAchievements() {
+        return Object.keys(this.gameState.achievements)
+            .filter(id => this.gameState.achievements[id].completed)
+            .map(id => ({
+                id,
+                ...window.ACHIEVEMENTS[id],
+                completedAt: this.gameState.achievements[id].completedAt
+            }));
     }
     
-    unlockAchievement(achievementId) {
-        const achievement = GameData.ACHIEVEMENTS[achievementId];
-        const achievementData = this.gameState.achievements[achievementId];
-        
-        achievementData.completed = true;
-        this.gameState.stats.totalAchievementsUnlocked++;
-        
-        // Aplicar recompensas
-        if (achievement.reward.credits) {
-            this.gameState.resources.credits += achievement.reward.credits;
-        }
-        
-        if (achievement.reward.prestigePoints) {
-            // Implementar cuando se agregue sistema de prestigio
-        }
-        
-        GameUtils.showNotification(
-            `🏆 ¡Logro desbloqueado: ${achievement.name}!`,
-            "success",
-            4000
-        );
-        
-        // Actualizar multiplicadores si el logro afecta la producción
-        this.updateGlobalMultipliers();
+    getAchievementProgress() {
+        const total = Object.keys(window.ACHIEVEMENTS || {}).length;
+        const completed = this.getCompletedAchievements().length;
+        return {
+            completed,
+            total,
+            percentage: Math.round((completed / total) * 100)
+        };
+    }
+    
+    getAchievementsByCategory(category) {
+        return Object.keys(window.ACHIEVEMENTS || {})
+            .filter(id => window.ACHIEVEMENTS[id].type === category)
+            .map(id => ({
+                id,
+                ...window.ACHIEVEMENTS[id],
+                completed: this.gameState.achievements[id]?.completed || false,
+                completedAt: this.gameState.achievements[id]?.completedAt
+            }));
     }
     
     checkClickAchievements() {
@@ -1009,6 +1106,172 @@ class GameEngine {
         if (!nextEra) return 1; // Máxima era alcanzada
         
         return Math.min(this.gameState.stats.totalCreditsEarned / nextEra.requiredCredits, 1);
+    }
+    
+    // ==========================================
+    // OPTIMIZACIONES DE RENDIMIENTO
+    // ==========================================
+    
+    optimizePerformance() {
+        // Configurar RAF para animaciones suaves
+        this.lastFrameTime = 0;
+        this.frameCount = 0;
+        this.fps = 60;
+        
+        // Sistema de cache para cálculos costosos
+        this.calculationCache = {
+            productionPerSecond: { value: 0, lastUpdate: 0, ttl: 1000 },
+            clickPower: { value: 1, lastUpdate: 0, ttl: 5000 },
+            globalMultipliers: { value: {}, lastUpdate: 0, ttl: 2000 }
+        };
+        
+        // Optimización de renderizado
+        this.renderQueue = [];
+        this.batchedUpdates = {};
+        
+        console.log("⚡ Optimizaciones de rendimiento aplicadas");
+    }
+    
+    getCachedValue(key, calculator) {
+        const now = Date.now();
+        const cached = this.calculationCache[key];
+        
+        if (cached && (now - cached.lastUpdate) < cached.ttl) {
+            return cached.value;
+        }
+        
+        const newValue = calculator();
+        this.calculationCache[key] = {
+            value: newValue,
+            lastUpdate: now,
+            ttl: cached ? cached.ttl : 1000
+        };
+        
+        return newValue;
+    }
+    
+    batchUpdate(elementId, property, value) {
+        if (!this.batchedUpdates[elementId]) {
+            this.batchedUpdates[elementId] = {};
+        }
+        this.batchedUpdates[elementId][property] = value;
+    }
+    
+    applyBatchedUpdates() {
+        Object.keys(this.batchedUpdates).forEach(elementId => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const updates = this.batchedUpdates[elementId];
+                Object.keys(updates).forEach(property => {
+                    if (property === 'textContent') {
+                        element.textContent = updates[property];
+                    } else if (property === 'className') {
+                        element.className = updates[property];
+                    } else {
+                        element.style[property] = updates[property];
+                    }
+                });
+            }
+        });
+        this.batchedUpdates = {};
+    }
+    
+    // Versión optimizada del cálculo de producción
+    calculateProductionPerSecondOptimized() {
+        return this.getCachedValue('productionPerSecond', () => {
+            let production = 0;
+            
+            // Usar forEach optimizado para evitar recrear arrays
+            Object.keys(this.gameState.units).forEach(unitId => {
+                const unit = this.gameState.units[unitId];
+                const unitData = GameData.PRODUCTION_UNITS[unitId];
+                
+                if (unit && unitData && unit.owned > 0) {
+                    const unitProduction = unitData.baseProduction * unit.owned * unit.efficiency;
+                    production += unitProduction;
+                }
+            });
+            
+            return production * this.globalMultipliers.production;
+        });
+    }
+    
+    // Versión optimizada del cálculo de poder de clic
+    calculateClickPowerOptimized() {
+        return this.getCachedValue('clickPower', () => {
+            let power = 1;
+            
+            // Agregar bonificaciones de upgrades
+            Object.keys(this.gameState.upgrades).forEach(upgradeId => {
+                const upgrade = this.gameState.upgrades[upgradeId];
+                const upgradeData = GameData.UPGRADES[upgradeId];
+                
+                if (upgrade.purchased && upgradeData && upgradeData.effect.type === 'click_power') {
+                    power += upgradeData.effect.value;
+                }
+            });
+            
+            return power * this.globalMultipliers.clickPower;
+        });
+    }
+    
+    // Sistema de actualizaciones escalonadas para reducir carga
+    useStaggeredUpdates() {
+        const updateStages = {
+            0: () => this.updateProduction(this.lastDeltaTime),
+            1: () => this.updateResearch(this.lastDeltaTime),
+            2: () => this.updateEventSystem(this.lastDeltaTime),
+            3: () => this.updatePlayerStats(this.lastDeltaTime),
+            4: () => this.applyBatchedUpdates()
+        };
+        
+        const currentStage = this.frameCount % 5;
+        if (updateStages[currentStage]) {
+            updateStages[currentStage]();
+        }
+    }
+    
+    // Monitoreo de FPS y ajuste dinámico
+    monitorPerformance(currentTime) {
+        if (this.lastFrameTime === 0) {
+            this.lastFrameTime = currentTime;
+            return;
+        }
+        
+        const deltaTime = currentTime - this.lastFrameTime;
+        this.fps = 1000 / deltaTime;
+        this.frameCount++;
+        this.lastFrameTime = currentTime;
+        
+        // Ajustar frecuencia de actualización si el FPS es bajo
+        if (this.fps < 30 && this.config.updateFrequency < 100) {
+            this.config.updateFrequency += 10;
+            console.warn(`⚠️ Rendimiento bajo detectado. Ajustando frecuencia a ${this.config.updateFrequency}ms`);
+        } else if (this.fps > 55 && this.config.updateFrequency > 50) {
+            this.config.updateFrequency -= 5;
+        }
+    }
+    
+    // Limpieza de memoria para evitar memory leaks
+    cleanupMemory() {
+        // Limpiar cache viejo
+        const now = Date.now();
+        Object.keys(this.calculationCache).forEach(key => {
+            const cached = this.calculationCache[key];
+            if ((now - cached.lastUpdate) > cached.ttl * 5) {
+                delete this.calculationCache[key];
+            }
+        });
+        
+        // Limpiar eventos procesados
+        this.eventSystem.activeEvents = this.eventSystem.activeEvents.filter(event => 
+            event.endTime > now
+        );
+        
+        // Forzar garbage collection si está disponible
+        if (window.gc && this.frameCount % 1000 === 0) {
+            window.gc();
+        }
     }
     
     // ==========================================

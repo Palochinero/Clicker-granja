@@ -90,6 +90,7 @@
                     <button class="tab" data-tab="research">🔬 Investigación</button>
                     <button class="tab" data-tab="prestige">✨ Prestigio</button>
                     <button class="tab" data-tab="achievements">🏆 Logros</button>
+                    <button class="tab" data-tab="statistics">📊 Estadísticas</button>
                     <button class="tab" data-tab="multiverse" id="multiverse-tab" style="display: none;">🌌 Multiverso</button>
                     <button class="tab" data-tab="settings">⚙️ Opciones</button>
                 </nav>
@@ -166,6 +167,12 @@
                     <!-- Pestaña de Logros -->
                     <div id="achievements-tab" class="tab-panel">
                         <h3>🏆 Logros y Recompensas</h3>
+                        <div id="achievements-progress" class="progress-section">
+                            <div class="achievement-progress-bar">
+                                <div class="progress-fill" id="achievement-progress-fill"></div>
+                            </div>
+                            <span id="achievement-progress-text">0% Completado</span>
+                        </div>
                         <div class="achievement-categories">
                             <button class="achievement-filter active" data-filter="all">Todos</button>
                             <button class="achievement-filter" data-filter="progress">Progresión</button>
@@ -174,6 +181,87 @@
                         </div>
                         <div id="achievements-list" class="achievements-container">
                             <!-- Los logros se generarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Pestaña de Estadísticas -->
+                    <div id="statistics-tab" class="tab-panel">
+                        <h3>📊 Estadísticas Avanzadas</h3>
+                        
+                        <div class="stats-section">
+                            <h4>🎯 Rendimiento de Juego</h4>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <span class="stat-value" id="total-playtime">0</span>
+                                    <span class="stat-label">Tiempo Total</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value" id="credits-per-click">1</span>
+                                    <span class="stat-label">Créditos/Clic</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value" id="credits-per-second">0</span>
+                                    <span class="stat-label">Créditos/Segundo</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-value" id="efficiency-rating">0%</span>
+                                    <span class="stat-label">Eficiencia</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-section">
+                            <h4>📈 Historial de Recursos</h4>
+                            <div class="chart-container">
+                                <canvas id="resource-chart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="stats-section">
+                            <h4>🏭 Análisis de Unidades</h4>
+                            <div class="chart-container">
+                                <canvas id="units-chart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="stats-section">
+                            <h4>🎖️ Récords Personales</h4>
+                            <div class="records-grid">
+                                <div class="record-item">
+                                    <span class="record-label">Máximo créditos/segundo:</span>
+                                    <span class="record-value" id="max-credits-per-second">0</span>
+                                </div>
+                                <div class="record-item">
+                                    <span class="record-label">Sesión más larga:</span>
+                                    <span class="record-value" id="longest-session">0</span>
+                                </div>
+                                <div class="record-item">
+                                    <span class="record-label">Clics en una sesión:</span>
+                                    <span class="record-value" id="max-clicks-session">0</span>
+                                </div>
+                                <div class="record-item">
+                                    <span class="record-label">Era alcanzada más rápido:</span>
+                                    <span class="record-value" id="fastest-era">Era 1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-section">
+                            <h4>💾 Información del Save</h4>
+                            <div class="save-info">
+                                <div class="save-stat">
+                                    <span class="save-label">Tamaño sin comprimir:</span>
+                                    <span class="save-value" id="save-size-original">0 KB</span>
+                                </div>
+                                <div class="save-stat">
+                                    <span class="save-label">Tamaño comprimido:</span>
+                                    <span class="save-value" id="save-size-compressed">0 KB</span>
+                                </div>
+                                <div class="save-stat">
+                                    <span class="save-label">Compresión:</span>
+                                    <span class="save-value" id="save-compression-ratio">0%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

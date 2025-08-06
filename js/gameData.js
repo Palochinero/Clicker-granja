@@ -4,6 +4,267 @@
  */
 
 // ==========================================
+// SISTEMA DE LOGROS
+// ==========================================
+
+const ACHIEVEMENTS = {
+    // Logros de Progresión
+    first_click: {
+        id: 'first_click',
+        name: 'Primer Paso',
+        description: 'Realiza tu primer clic',
+        icon: '👆',
+        type: 'progress',
+        condition: (gameState) => gameState.stats.totalClicks >= 1,
+        reward: { credits: 100 },
+        completed: false
+    },
+    
+    hundred_clicks: {
+        id: 'hundred_clicks',
+        name: 'Centinela del Clic',
+        description: 'Realiza 100 clics',
+        icon: '💯',
+        type: 'progress',
+        condition: (gameState) => gameState.stats.totalClicks >= 100,
+        reward: { credits: 1000, clickPowerBonus: 0.1 },
+        completed: false
+    },
+    
+    thousand_clicks: {
+        id: 'thousand_clicks',
+        name: 'Maestro del Clic',
+        description: 'Realiza 1,000 clics',
+        icon: '🔥',
+        type: 'progress',
+        condition: (gameState) => gameState.stats.totalClicks >= 1000,
+        reward: { credits: 10000, clickPowerBonus: 0.2 },
+        completed: false
+    },
+    
+    first_million: {
+        id: 'first_million',
+        name: 'Millonario',
+        description: 'Acumula 1 millón de créditos',
+        icon: '💰',
+        type: 'progress',
+        condition: (gameState) => gameState.stats.totalCreditsEarned >= 1000000,
+        reward: { credits: 100000, productionBonus: 0.05 },
+        completed: false
+    },
+    
+    first_billion: {
+        id: 'first_billion',
+        name: 'Billonario',
+        description: 'Acumula 1 billón de créditos',
+        icon: '💎',
+        type: 'progress',
+        condition: (gameState) => gameState.stats.totalCreditsEarned >= 1000000000,
+        reward: { credits: 10000000, productionBonus: 0.1 },
+        completed: false
+    },
+    
+    // Logros de Unidades
+    first_unit: {
+        id: 'first_unit',
+        name: 'Primera Cosecha',
+        description: 'Compra tu primera unidad de producción',
+        icon: '🏭',
+        type: 'units',
+        condition: (gameState) => gameState.stats.totalUnits >= 1,
+        reward: { credits: 500, knowledge: 10 },
+        completed: false
+    },
+    
+    unit_collector: {
+        id: 'unit_collector',
+        name: 'Coleccionista',
+        description: 'Posee 50 unidades en total',
+        icon: '📦',
+        type: 'units',
+        condition: (gameState) => gameState.stats.totalUnits >= 50,
+        reward: { credits: 25000, productionBonus: 0.15 },
+        completed: false
+    },
+    
+    unit_master: {
+        id: 'unit_master',
+        name: 'Maestro Industrial',
+        description: 'Posee 200 unidades en total',
+        icon: '🏗️',
+        type: 'units',
+        condition: (gameState) => gameState.stats.totalUnits >= 200,
+        reward: { credits: 100000, productionBonus: 0.25 },
+        completed: false
+    },
+    
+    // Logros de Velocidad
+    speed_demon: {
+        id: 'speed_demon',
+        name: 'Demonio de la Velocidad',
+        description: 'Alcanza 1000 créditos/segundo',
+        icon: '⚡',
+        type: 'speed',
+        condition: (gameState) => gameState.production.creditsPerSecond >= 1000,
+        reward: { credits: 50000, timeAcceleration: 0.1 },
+        completed: false
+    },
+    
+    production_master: {
+        id: 'production_master',
+        name: 'Maestro de Producción',
+        description: 'Alcanza 100,000 créditos/segundo',
+        icon: '🚀',
+        type: 'speed',
+        condition: (gameState) => gameState.production.creditsPerSecond >= 100000,
+        reward: { credits: 1000000, timeAcceleration: 0.2 },
+        completed: false
+    },
+    
+    // Logros de Era
+    era_explorer: {
+        id: 'era_explorer',
+        name: 'Explorador de Eras',
+        description: 'Alcanza la Era 3',
+        icon: '🌍',
+        type: 'era',
+        condition: (gameState) => gameState.player.currentEra >= 3,
+        reward: { credits: 500000, influence: 100 },
+        completed: false
+    },
+    
+    space_pioneer: {
+        id: 'space_pioneer',
+        name: 'Pionero Espacial',
+        description: 'Alcanza la Era 6',
+        icon: '🚀',
+        type: 'era',
+        condition: (gameState) => gameState.player.currentEra >= 6,
+        reward: { credits: 10000000, knowledge: 1000 },
+        completed: false
+    },
+    
+    galactic_emperor: {
+        id: 'galactic_emperor',
+        name: 'Emperador Galáctico',
+        description: 'Alcanza la Era 12',
+        icon: '👑',
+        type: 'era',
+        condition: (gameState) => gameState.player.currentEra >= 12,
+        reward: { quantum_time: 100, reality_essence: 50 },
+        completed: false
+    },
+    
+    // Logros de Prestigio
+    first_prestige: {
+        id: 'first_prestige',
+        name: 'Renacimiento',
+        description: 'Realiza tu primer prestigio',
+        icon: '♻️',
+        type: 'prestige',
+        condition: (gameState) => gameState.stats.totalPrestiges >= 1,
+        reward: { credits: 0, prestigeBonus: 0.1 },
+        completed: false
+    },
+    
+    prestige_master: {
+        id: 'prestige_master',
+        name: 'Maestro del Renacimiento',
+        description: 'Realiza 10 prestigios',
+        icon: '🔄',
+        type: 'prestige',
+        condition: (gameState) => gameState.stats.totalPrestiges >= 10,
+        reward: { credits: 0, prestigeBonus: 0.25 },
+        completed: false
+    },
+    
+    // Logros de Investigación
+    researcher: {
+        id: 'researcher',
+        name: 'Investigador',
+        description: 'Desbloquea 10 tecnologías',
+        icon: '🔬',
+        type: 'research',
+        condition: (gameState) => Object.keys(gameState.research.unlockedTechs).length >= 10,
+        reward: { knowledge: 500, credits: 100000 },
+        completed: false
+    },
+    
+    tech_master: {
+        id: 'tech_master',
+        name: 'Maestro Tecnológico',
+        description: 'Desbloquea 50 tecnologías',
+        icon: '🧪',
+        type: 'research',
+        condition: (gameState) => Object.keys(gameState.research.unlockedTechs).length >= 50,
+        reward: { knowledge: 2000, credits: 1000000 },
+        completed: false
+    },
+    
+    // Logros Secretos
+    patience_master: {
+        id: 'patience_master',
+        name: 'Maestro de la Paciencia',
+        description: 'Mantén el juego funcionando durante 24 horas',
+        icon: '⏰',
+        type: 'secret',
+        condition: (gameState) => gameState.stats.totalPlayTime >= 86400000,
+        reward: { credits: 5000000, productionBonus: 0.5 },
+        completed: false,
+        hidden: true
+    },
+    
+    click_master: {
+        id: 'click_master',
+        name: 'Dios del Clic',
+        description: 'Realiza 10,000 clics en una sola sesión',
+        icon: '🎯',
+        type: 'secret',
+        condition: (gameState) => gameState.stats.clicksThisSession >= 10000,
+        reward: { credits: 10000000, clickPowerBonus: 1.0 },
+        completed: false,
+        hidden: true
+    },
+    
+    multiverse_pioneer: {
+        id: 'multiverse_pioneer',
+        name: 'Pionero Multiversal',
+        description: 'Planta tu primera Semilla Cuántica',
+        icon: '🌌',
+        type: 'multiverse',
+        condition: (gameState) => gameState.multiverse && gameState.multiverse.totalSeedsPlanted >= 1,
+        reward: { quantum_time: 500, reality_essence: 100 },
+        completed: false
+    },
+    
+    reality_sculptor: {
+        id: 'reality_sculptor',
+        name: 'Escultor de Realidades',
+        description: 'Conecta 5 universos simultáneamente',
+        icon: '🎨',
+        type: 'multiverse',
+        condition: (gameState) => {
+            return gameState.multiverse && 
+                   Object.keys(gameState.multiverse.connectedUniverses).length >= 5;
+        },
+        reward: { quantum_time: 1000, dimensional_energy: 500 },
+        completed: false
+    }
+};
+
+// Categorías de logros para la UI
+const ACHIEVEMENT_CATEGORIES = {
+    progress: { name: 'Progresión', icon: '📈', color: '#00ff88' },
+    units: { name: 'Unidades', icon: '🏭', color: '#0088ff' },
+    speed: { name: 'Velocidad', icon: '⚡', color: '#ffaa00' },
+    era: { name: 'Eras', icon: '🌍', color: '#8800ff' },
+    prestige: { name: 'Prestigio', icon: '♻️', color: '#ff0088' },
+    research: { name: 'Investigación', icon: '🔬', color: '#00ffaa' },
+    multiverse: { name: 'Multiverso', icon: '🌌', color: '#aa00ff' },
+    secret: { name: 'Secretos', icon: '🔒', color: '#ff8800' }
+};
+
+// ==========================================
 // CONFIGURACIÓN DE ERAS
 // ==========================================
 
@@ -1375,7 +1636,12 @@ const INITIAL_GAME_STATE = {
         totalCreditsEarned: 0,
         totalUnitsBuilt: 0,
         totalTechnologiesResearched: 0,
-        totalAchievementsUnlocked: 0
+        totalAchievementsUnlocked: 0,
+        totalUnits: 0,
+        totalPlayTime: 0,
+        totalPrestiges: 0,
+        clicksThisSession: 0,
+        sessionStartTime: Date.now()
     },
     units: {},
     upgrades: {},
